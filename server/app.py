@@ -6,14 +6,34 @@ from datetime import datetime, timedelta
 from functools import wraps
 from bson import ObjectId
 from dotenv import load_dotenv
-from database import Database
+from database import Database, extract_pdf_metadata, calculate_metadata_score, calculate_access_risk_score
 import hashlib
 import uuid
 from werkzeug.utils import secure_filename
+import pickle
+import pandas as pd
+import magic
 
 load_dotenv()
 
 app = Flask(__name__)
+
+# ============================================================================
+# Load ML Model for Survivability Prediction
+# ============================================================================
+
+ML_MODEL = None
+MODEL_PATH = os.environ.get('MODEL_PATH', 'model.pkl')
+
+try:
+    if os.path.exists(MODEL_PATH):
+        with open(MODEL_PATH, 'rb') as f:
+            ML_MODEL = pickle.load(f)
+        print(f"✅ ML model loaded from {MODEL_PATH}")
+    else:
+        print(f"⚠️  ML model not found at {MODEL_PATH}. Survivability scores will use fallback calculation.")
+except Exception as e:
+    print(f"⚠️  Failed to load ML model: {e}. Using fallback calculation.")
 
 # ============================================================================
 # Configuration & CORS
@@ -97,7 +117,6 @@ def calculate_sha256(file_path):
 def detect_mime_type(file_path):
     """Detect actual MIME type using python-magic."""
     try:
-        import magic
         mime = magic.Magic(mime=True)
         return mime.from_file(file_path)
     except:
@@ -108,80 +127,126 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def calculate_metadata_score(metadata_json):
+def extract_ml_features(file_data):
     """
-    Calculate metadata completeness score (0-100).
-    Higher score = more complete metadata.
+    Extract features from file_data that match the training data columns.
+    Returns a pandas DataFrame with a single row.
     """
-    if not metadata_json:
-        return 0
+    # Get file age in days
+    uploaded_at = file_data.get('uploaded_at', datetime.utcnow())
+    if isinstance(uploaded_at, str):
+        uploaded_at = datetime.fromisoformat(uploaded_at.replace('Z', '+00:00'))
+    file_age_days = (datetime.utcnow() - uploaded_at).days
     
-    score = 0
-    max_score = 0
-    
-    # Important metadata fields and their weights
-    important_fields = {
-        'title': 10,
-        'description': 10,
-        'date_taken': 15,
-        'location': 15,
-        'people': 10,
-        'tags': 10,
-        'camera': 5,
-        'author': 10,
-        'notes': 10,
-        'event': 5
-    }
-    
-    for field, weight in important_fields.items():
-        max_score += weight
-        if field in metadata_json and metadata_json[field]:
-            score += weight
-    
-    return int((score / max_score) * 100) if max_score > 0 else 0
-
-def calculate_access_risk(file_data):
-    """
-    Calculate access risk score (0-100) based on file characteristics.
-    Higher score = higher risk of becoming inaccessible.
-    """
-    risk_score = 0
-    reasons = []
-    
-    # Check file format obsolescence risk
-    high_risk_formats = ['wma', 'rm', 'ra', 'swf', 'fla', 'psd', 'ai']
-    medium_risk_formats = ['doc', 'avi', 'mov', 'wmv', 'bmp', 'tiff']
-    
+    # Map file extension to category
     ext = file_data.get('ext', '').lower()
     
+    # Common format categories
+    image_formats = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'tif', 'webp', 'heic', 'heif', 'svg']
+    video_formats = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'webm', 'm4v', 'mpeg', 'mpg']
+    document_formats = ['pdf', 'doc', 'docx', 'txt', 'rtf', 'odt']
+    audio_formats = ['mp3', 'wav', 'ogg', 'flac', 'm4a', 'aac']
+    
+    if ext in image_formats:
+        file_type = 'image'
+    elif ext in video_formats:
+        file_type = 'video'
+    elif ext in document_formats:
+        file_type = 'document'
+    elif ext in audio_formats:
+        file_type = 'audio'
+    else:
+        file_type = 'other'
+    
+    # Format risk levels
+    high_risk_formats = ['wma', 'rm', 'ra', 'swf', 'fla', 'psd', 'ai', 'doc', 'bmp', 'tiff']
+    medium_risk_formats = ['avi', 'mov', 'wmv']
+    modern_formats = ['mp4', 'png', 'jpg', 'jpeg', 'pdf', 'mp3', 'webp']
+    
     if ext in high_risk_formats:
-        risk_score += 40
-        reasons.append(f"High-risk format (.{ext})")
+        format_risk = 'high'
     elif ext in medium_risk_formats:
-        risk_score += 20
-        reasons.append(f"Medium-risk format (.{ext})")
+        format_risk = 'medium'
+    elif ext in modern_formats:
+        format_risk = 'low'
+    else:
+        format_risk = 'medium'
     
-    # Check metadata completeness (low metadata = harder to find/identify)
+    # Build feature dictionary matching training data
+    features = {
+        'ext': ext,
+        'file_type': file_type,
+        'format_risk': format_risk,
+        'size_bytes': file_data.get('size_bytes', 0),
+        'metadata_score': file_data.get('metadata_score', 0),
+        'access_risk_score': file_data.get('access_risk_score', 0),
+        'duplicate_count': file_data.get('duplicate_count', 0),
+        'access_count': file_data.get('access_count', 0),
+        'file_age_days': file_age_days,
+        'mime_mismatch': 1 if file_data.get('mime_claimed') != file_data.get('mime_detected') else 0,
+    }
+    
+    return pd.DataFrame([features])
+
+def predict_survivability(file_data):
+    """
+    Predict survivability score (0-100) for a file.
+    Higher score = better chance of long-term survival.
+    Uses ML model if available, otherwise uses rule-based fallback.
+    """
+    if ML_MODEL is not None:
+        try:
+            # Extract features
+            features_df = extract_ml_features(file_data)
+            
+            # Predict using the model
+            prediction = ML_MODEL.predict(features_df)[0]
+            
+            # Ensure score is between 0-100
+            score = max(0, min(100, prediction))
+            
+            return round(score, 1)
+        except Exception as e:
+            print(f"[WARNING] ML prediction failed: {e}. Using fallback.")
+    
+    # Fallback: Rule-based scoring (inverse of access risk)
+    access_risk = file_data.get('access_risk_score', 50)
     metadata_score = file_data.get('metadata_score', 0)
-    if metadata_score < 30:
-        risk_score += 30
-        reasons.append("Poor metadata (hard to identify)")
-    elif metadata_score < 60:
-        risk_score += 15
-        reasons.append("Incomplete metadata")
     
-    # Check if MIME types mismatch (potential corruption)
-    if file_data.get('mime_claimed') != file_data.get('mime_detected'):
-        risk_score += 20
-        reasons.append("File type mismatch (possible corruption)")
+    # Start with inverse of access risk
+    base_score = 100 - access_risk
     
-    # Check file age (older files = higher risk if not maintained)
-    # This would need uploaded_at from the actual file record
+    # Bonus for good metadata
+    metadata_bonus = metadata_score * 0.2  # Up to +20 points
     
-    # Cap at 100
-    risk_score = min(risk_score, 100)
+    # Bonus for duplicates (redundancy helps survival)
+    duplicate_bonus = min(file_data.get('duplicate_count', 0) * 5, 15)
     
-    return risk_score, "; ".join(reasons) if reasons else "Low risk"
+    final_score = base_score + metadata_bonus + duplicate_bonus
+    return round(max(0, min(100, final_score)), 1)
+
+def calculate_vault_resiliency(vault_id):
+    """
+    Calculate the overall resiliency score for a vault.
+    This is the average survivability score across all files.
+    """
+    try:
+        files = list(db.files.find({"vault_id": ObjectId(vault_id)}))
+        
+        if not files:
+            return 0
+        
+        # Get survivability scores
+        scores = [f.get('survivability_score', 0) for f in files if 'survivability_score' in f]
+        
+        if not scores:
+            return 0
+        
+        avg_score = sum(scores) / len(scores)
+        return round(avg_score, 1)
+    except Exception as e:
+        print(f"[ERROR] Failed to calculate vault resiliency: {e}")
+        return 0
 
 def login_required(f):
     """Protects routes by checking for user_id in session."""
@@ -406,14 +471,24 @@ def get_vault_details(vault_id):
         })
         if not vault: return jsonify({"error": "Vault not found"}), 404
         
+        # Calculate resiliency if not already set
+        resiliency_score = vault.get('resiliency_score')
+        if resiliency_score is None:
+            resiliency_score = calculate_vault_resiliency(vault_id)
+            db.vaults.update_one(
+                {"_id": ObjectId(vault_id)},
+                {"$set": {"resiliency_score": resiliency_score}}
+            )
+        
         return jsonify(stringify_ids({
             "id": vault['_id'],
             "name": vault.get('name'),
             "joinCode": vault.get('join_code'),
-            "resilienceScore": vault.get('resilience_score', 85),
+            "resilienceScore": resiliency_score,
             "members": vault.get('members', [])
         }))
-    except:
+    except Exception as e:
+        print(f"[ERROR] Get vault details failed: {e}")
         return jsonify({"error": "Invalid vault ID"}), 400
 
 # ============================================================================
@@ -481,7 +556,14 @@ def upload_file(vault_id):
         mime_detected = detect_mime_type(file_path)
         mime_claimed = file.content_type or "application/octet-stream"
         
-        # Calculate metadata score
+        # Extract PDF metadata automatically if it's a PDF
+        if file_extension.lower() == 'pdf':
+            pdf_metadata = extract_pdf_metadata(file_path)
+            # Merge PDF metadata with user-provided metadata
+            if pdf_metadata:
+                metadata_json.update(pdf_metadata)
+        
+        # Calculate metadata score with enhanced data
         metadata_score = calculate_metadata_score(metadata_json)
         
         # Check for duplicates in this vault
@@ -490,14 +572,28 @@ def upload_file(vault_id):
             "sha256": sha256_hash
         })
         
-        # Calculate access risk
+        # Calculate access risk using the new function from database.py
+        access_risk_score, access_risk_reason = calculate_access_risk_score(
+            mime_claimed, 
+            mime_detected, 
+            metadata_json
+        )
+        
+        # Prepare data for survivability prediction
         temp_file_data = {
             'ext': file_extension,
             'mime_claimed': mime_claimed,
             'mime_detected': mime_detected,
-            'metadata_score': metadata_score
+            'metadata_score': metadata_score,
+            'uploaded_at': datetime.utcnow(),
+            'duplicate_count': duplicate_count,
+            'access_count': 0,
+            'access_risk_score': access_risk_score,
+            'size_bytes': size_bytes
         }
-        access_risk_score, access_risk_reason = calculate_access_risk(temp_file_data)
+        
+        # Predict survivability score using ML model
+        survivability_score = predict_survivability(temp_file_data)
         
         # Create file record
         file_record = {
@@ -517,6 +613,7 @@ def upload_file(vault_id):
             "duplicate_count": duplicate_count,
             "access_risk_score": access_risk_score,
             "access_risk_reason": access_risk_reason,
+            "survivability_score": survivability_score,
             "uploaded_at": datetime.utcnow(),
             "last_accessed_at": datetime.utcnow(),
             "access_count": 0
@@ -525,7 +622,15 @@ def upload_file(vault_id):
         # Insert into database
         result = db.files.insert_one(file_record)
         
+        # Update vault resiliency score
+        vault_resiliency = calculate_vault_resiliency(vault_id)
+        db.vaults.update_one(
+            {"_id": ObjectId(vault_id)},
+            {"$set": {"resiliency_score": vault_resiliency}}
+        )
+        
         print(f"[DEBUG] File uploaded: {original_filename} ({size_bytes} bytes) to vault {vault_id}")
+        print(f"[DEBUG] Survivability score: {survivability_score}, Vault resiliency: {vault_resiliency}")
         
         return jsonify(stringify_ids({
             "success": True,
@@ -538,6 +643,7 @@ def upload_file(vault_id):
                 "mime_type": mime_detected,
                 "metadata_score": metadata_score,
                 "access_risk_score": access_risk_score,
+                "survivability_score": survivability_score,
                 "duplicate_count": duplicate_count,
                 "uploaded_at": file_record['uploaded_at'].isoformat()
             }

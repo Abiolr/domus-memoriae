@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -94,9 +94,7 @@ export default function Vault() {
               try {
                 const userRes = await fetch(
                   `${API_BASE}/users/${member.user_id}`,
-                  {
-                    credentials: "include",
-                  },
+                  { credentials: "include" },
                 );
                 if (userRes.ok) {
                   const userData = await userRes.json();
@@ -146,9 +144,7 @@ export default function Vault() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const metadata = {
-        title: file.name,
-      };
+      const metadata = { title: file.name };
       formData.append("metadata", JSON.stringify(metadata));
 
       const res = await fetch(`${API_BASE}/vaults/${vaultId}/files`, {
@@ -158,17 +154,12 @@ export default function Vault() {
       });
 
       const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Upload failed");
-      }
+      if (!res.ok) throw new Error(data.error || "Upload failed");
 
       setUploadProgress("Upload successful!");
       await fetchFolderContents();
 
-      setTimeout(() => {
-        setUploadProgress(null);
-      }, 2000);
+      setTimeout(() => setUploadProgress(null), 2000);
     } catch (err) {
       console.error("Upload failed:", err);
       setUploadProgress(`Error: ${err.message}`);
@@ -184,7 +175,6 @@ export default function Vault() {
       const res = await fetch(`${API_BASE}/files/${fileId}/download`, {
         credentials: "include",
       });
-
       if (!res.ok) throw new Error("Download failed");
 
       const blob = await res.blob();
@@ -228,8 +218,6 @@ export default function Vault() {
       "mpg",
     ];
     const audio = ["mp3", "wav", "ogg", "flac", "m4a", "aac"];
-
-    // Added text formats to the document category
     const documents = [
       "pdf",
       "doc",
@@ -243,7 +231,7 @@ export default function Vault() {
       "log",
     ];
 
-    const extension = ext.toLowerCase();
+    const extension = String(ext || "").toLowerCase();
     if (images.includes(extension)) return "image";
     if (videos.includes(extension)) return "video";
     if (audio.includes(extension)) return "audio";
@@ -274,7 +262,6 @@ export default function Vault() {
 
       const rawBlob = await res.blob();
 
-      // Strict MIME type mapping to force inline rendering and prevent auto-downloads
       const mimeTypes = {
         pdf: "application/pdf",
         jpg: "image/jpeg",
@@ -293,13 +280,11 @@ export default function Vault() {
         json: "application/json",
       };
 
-      const ext = file.ext.toLowerCase();
-      const mimeType =
-        mimeTypes[ext] || rawBlob.type || "application/octet-stream";
+      const ext = String(file.ext || "").toLowerCase();
+      const mimeType = mimeTypes[ext] || rawBlob.type || "application/octet-stream";
 
       const typedBlob = new Blob([rawBlob], { type: mimeType });
       const url = URL.createObjectURL(typedBlob);
-
       setPreviewUrl(url);
     } catch (err) {
       console.error("Preview failed:", err);
@@ -309,14 +294,32 @@ export default function Vault() {
   };
 
   const closePreview = () => {
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewFile(null);
     setPreviewUrl(null);
   };
 
-  // UPDATED: Full screen styles for preview content
+  // Survivability score resolver (keeps both branch semantics)
+  const getSurvivabilityScore = (item) => {
+    if (!item) return null;
+
+    // main branch field
+    if (item.survivability_score !== undefined && item.survivability_score !== null) {
+      const s = Number(item.survivability_score);
+      return Number.isFinite(s) ? s : null;
+    }
+
+    // join_branch field: access_risk_score -> survivability-like score
+    if (item.access_risk_score !== undefined && item.access_risk_score !== null) {
+      const r = Number(item.access_risk_score);
+      if (!Number.isFinite(r)) return null;
+      const s = 100 - r;
+      return Math.max(0, Math.min(100, s));
+    }
+
+    return null;
+  };
+
   const renderPreviewContent = () => {
     if (!previewFile || !previewUrl) return null;
 
@@ -328,11 +331,7 @@ export default function Vault() {
           <img
             src={previewUrl}
             alt={previewFile.original_filename}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "contain",
-            }}
+            style={{ width: "100%", height: "100%", objectFit: "contain" }}
           />
         );
 
@@ -340,11 +339,7 @@ export default function Vault() {
         return (
           <video
             controls
-            style={{
-              width: "100%",
-              height: "100%",
-              backgroundColor: "#000",
-            }}
+            style={{ width: "100%", height: "100%", backgroundColor: "#000" }}
           >
             <source src={previewUrl} type={`video/${previewFile.ext}`} />
             Your browser does not support video playback.
@@ -355,20 +350,16 @@ export default function Vault() {
         return (
           <div className="preview-audio-container">
             <div className="preview-audio-icon">🎵</div>
-            <audio
-              controls
-              style={{ width: "100%", maxWidth: "500px" }}
-              autoPlay
-            >
+            <audio controls style={{ width: "100%", maxWidth: "500px" }} autoPlay>
               <source src={previewUrl} type={`audio/${previewFile.ext}`} />
               Your browser does not support audio playback.
             </audio>
           </div>
         );
 
-      case "document":
+      case "document": {
         const viewableFileTypes = ["pdf", "txt", "md", "csv", "json", "log"];
-        const fileExt = previewFile.ext.toLowerCase();
+        const fileExt = String(previewFile.ext || "").toLowerCase();
 
         if (viewableFileTypes.includes(fileExt)) {
           return (
@@ -393,16 +384,14 @@ export default function Vault() {
             <button
               className="preview-download-btn"
               onClick={() =>
-                handleFileDownload(
-                  previewFile.file_id,
-                  previewFile.original_filename,
-                )
+                handleFileDownload(previewFile.file_id, previewFile.original_filename)
               }
             >
               Download to View
             </button>
           </div>
         );
+      }
 
       default:
         return (
@@ -459,9 +448,7 @@ export default function Vault() {
         {vaultInfo?.joinCode && (
           <div className="vaultJoinBanner">
             <div className="banner-content">
-              <span className="banner-label">
-                Share this code to invite family:
-              </span>
+              <span className="banner-label">Share this code to invite family:</span>
               <div className="code-display">
                 <span className="code-text">{vaultInfo.joinCode}</span>
                 <button
@@ -490,15 +477,14 @@ export default function Vault() {
               <p className="vaultSubtitle">FAMILY ARCHIVE</p>
             </div>
           </div>
+
           <div className="resilienceCard">
             <div className="resilienceLeft">
               <div className="labelRow">
                 <span className="label">Archive Resilience</span>
               </div>
             </div>
-            <div
-              className={`scorePill ${scoreTone(vaultInfo?.resilienceScore || 0)}`}
-            >
+            <div className={`scorePill ${scoreTone(vaultInfo?.resilienceScore || 0)}`}>
               {vaultInfo?.resilienceScore || 0}
               <span className="scoreSuffix">/100</span>
             </div>
@@ -529,7 +515,9 @@ export default function Vault() {
 
             {uploadProgress && (
               <div
-                className={`upload-status ${uploadProgress.includes("Error") ? "error" : "success"}`}
+                className={`upload-status ${
+                  uploadProgress.includes("Error") ? "error" : "success"
+                }`}
               >
                 {uploadProgress}
               </div>
@@ -546,44 +534,50 @@ export default function Vault() {
                   </div>
                 </div>
               ) : (
-                items.map((item) => (
-                  <div
-                    key={item._id || item.file_id}
-                    className={`itemCard ${selectedItem?._id === item._id ? "selected" : ""}`}
-                    onClick={() => setSelectedItem(item)}
-                  >
-                    <div className="icon">
-                      <FileIcon />
-                    </div>
-                    <div className="meta">
-                      <div className="nameRow">
-                        <span className="name">{item.original_filename}</span>
-                        {item.access_risk_score && (
-                          <span
-                            className={`miniScore ${scoreTone(100 - item.access_risk_score)}`}
-                          >
-                            {100 - item.access_risk_score}
-                          </span>
+                items.map((item) => {
+                  const score = getSurvivabilityScore(item);
+                  return (
+                    <div
+                      key={item._id || item.file_id}
+                      className={`itemCard ${
+                        selectedItem?._id === item._id ? "selected" : ""
+                      }`}
+                      onClick={() => setSelectedItem(item)}
+                    >
+                      <div className="icon">
+                        <FileIcon />
+                      </div>
+
+                      <div className="meta">
+                        <div className="nameRow">
+                          <span className="name">{item.original_filename}</span>
+                          {score !== null && (
+                            <span className={`miniScore ${scoreTone(score)}`}>
+                              {score}
+                            </span>
+                          )}
+                        </div>
+
+                        {item.size_bytes && (
+                          <div className="sub">
+                            {(item.size_bytes / 1024).toFixed(1)} KB
+                          </div>
                         )}
                       </div>
-                      {item.size_bytes && (
-                        <div className="sub">
-                          {(item.size_bytes / 1024).toFixed(1)} KB
-                        </div>
-                      )}
+
+                      <button
+                        className="preview-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleFilePreview(item);
+                        }}
+                        title="Preview file"
+                      >
+                        Preview
+                      </button>
                     </div>
-                    <button
-                      className="preview-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleFilePreview(item);
-                      }}
-                      title="Preview file"
-                    >
-                      Preview
-                    </button>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </section>
@@ -610,20 +604,20 @@ export default function Vault() {
             {selectedItem && (
               <div className="detailsCard">
                 <div className="detailsHeader">
-                  <div className="detailsName">
-                    {selectedItem.original_filename}
-                  </div>
-                  {selectedItem.access_risk_score && (
-                    <div
-                      className={`miniScore ${scoreTone(100 - selectedItem.access_risk_score)}`}
-                    >
-                      {100 - selectedItem.access_risk_score}
-                    </div>
-                  )}
+                  <div className="detailsName">{selectedItem.original_filename}</div>
+
+                  {(() => {
+                    const score = getSurvivabilityScore(selectedItem);
+                    return score !== null ? (
+                      <div className={`miniScore ${scoreTone(score)}`}>{score}</div>
+                    ) : null;
+                  })()}
                 </div>
+
                 <div className="kv">
                   <div className="k">Type</div>
                   <div className="v">.{selectedItem.ext}</div>
+
                   {selectedItem.size_bytes && (
                     <>
                       <div className="k">Size</div>
@@ -632,24 +626,35 @@ export default function Vault() {
                       </div>
                     </>
                   )}
+
+                  {selectedItem.survivability_score !== undefined && (
+                    <>
+                      <div className="k">Survivability</div>
+                      <div className="v">{selectedItem.survivability_score}/100</div>
+                    </>
+                  )}
+
+                  {selectedItem.metadata_score !== undefined && (
+                    <>
+                      <div className="k">Metadata Quality</div>
+                      <div className="v">{selectedItem.metadata_score}/100</div>
+                    </>
+                  )}
+
                   {selectedItem.uploaded_at && (
                     <>
                       <div className="k">Uploaded</div>
                       <div className="v">
-                        {new Date(
-                          selectedItem.uploaded_at,
-                        ).toLocaleDateString()}
+                        {new Date(selectedItem.uploaded_at).toLocaleDateString()}
                       </div>
                     </>
                   )}
                 </div>
+
                 <button
                   className="download-button"
                   onClick={() =>
-                    handleFileDownload(
-                      selectedItem.file_id,
-                      selectedItem.original_filename,
-                    )
+                    handleFileDownload(selectedItem.file_id, selectedItem.original_filename)
                   }
                 >
                   <span className="button-text">Download File</span>
@@ -660,6 +665,7 @@ export default function Vault() {
           </aside>
         </main>
       </div>
+
       <Footer />
 
       {/* Preview Modal */}
@@ -692,10 +698,7 @@ export default function Vault() {
               <button
                 className="download-button"
                 onClick={() =>
-                  handleFileDownload(
-                    previewFile.file_id,
-                    previewFile.original_filename,
-                  )
+                  handleFileDownload(previewFile.file_id, previewFile.original_filename)
                 }
               >
                 <span className="button-text">Download File</span>
