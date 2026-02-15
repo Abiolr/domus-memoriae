@@ -25,6 +25,8 @@ def home():
         "version": "1.0"
         })
 
+
+
 if __name__ == '__main__':
     print("Starting Flask server...")
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
