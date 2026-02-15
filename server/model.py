@@ -17,7 +17,7 @@ from sklearn.metrics import mean_absolute_error, r2_score
 import numpy as np
 
 # Configuration
-CSV_PATH = "server/data.csv"
+CSV_PATH = "data.csv"
 MODEL_PATH = "model.pkl"
 TARGET = "survivability_score"
 TEST_SIZE = 0.2
