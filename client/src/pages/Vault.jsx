@@ -629,7 +629,7 @@ export default function Vault() {
 
                   {selectedItem.survivability_score !== undefined && (
                     <>
-                      <div className="k">Survivability</div>
+                      <div className="k">Surviv.</div>
                       <div className="v">{selectedItem.survivability_score}/100</div>
                     </>
                   )}
