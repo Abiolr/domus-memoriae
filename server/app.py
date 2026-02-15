@@ -6,12 +6,13 @@ from datetime import datetime, timedelta
 from functools import wraps
 from bson import ObjectId
 from dotenv import load_dotenv
-from database import Database
+from database import Database, extract_pdf_metadata, calculate_metadata_score, calculate_access_risk_score
 import hashlib
 import uuid
 from werkzeug.utils import secure_filename
 import pickle
 import pandas as pd
+import magic
 
 load_dotenv()
 
@@ -116,7 +117,6 @@ def calculate_sha256(file_path):
 def detect_mime_type(file_path):
     """Detect actual MIME type using python-magic."""
     try:
-        import magic
         mime = magic.Magic(mime=True)
         return mime.from_file(file_path)
     except:
@@ -126,81 +126,6 @@ def allowed_file(filename):
     """Check if file extension is allowed."""
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-def calculate_metadata_score(metadata_json):
-    """
-    Calculate metadata completeness score (0-100).
-    Higher score = more complete metadata.
-    """
-    if not metadata_json:
-        return 0
-    
-    score = 0
-    max_score = 0
-    
-    # Important metadata fields and their weights
-    important_fields = {
-        'title': 10,
-        'description': 10,
-        'date_taken': 15,
-        'location': 15,
-        'people': 10,
-        'tags': 10,
-        'camera': 5,
-        'author': 10,
-        'notes': 10,
-        'event': 5
-    }
-    
-    for field, weight in important_fields.items():
-        max_score += weight
-        if field in metadata_json and metadata_json[field]:
-            score += weight
-    
-    return int((score / max_score) * 100) if max_score > 0 else 0
-
-def calculate_access_risk(file_data):
-    """
-    Calculate access risk score (0-100) based on file characteristics.
-    Higher score = higher risk of becoming inaccessible.
-    """
-    risk_score = 0
-    reasons = []
-    
-    # Check file format obsolescence risk
-    high_risk_formats = ['wma', 'rm', 'ra', 'swf', 'fla', 'psd', 'ai']
-    medium_risk_formats = ['doc', 'avi', 'mov', 'wmv', 'bmp', 'tiff']
-    
-    ext = file_data.get('ext', '').lower()
-    
-    if ext in high_risk_formats:
-        risk_score += 40
-        reasons.append(f"High-risk format (.{ext})")
-    elif ext in medium_risk_formats:
-        risk_score += 20
-        reasons.append(f"Medium-risk format (.{ext})")
-    
-    # Check metadata completeness (low metadata = harder to find/identify)
-    metadata_score = file_data.get('metadata_score', 0)
-    if metadata_score < 30:
-        risk_score += 30
-        reasons.append("Poor metadata (hard to identify)")
-    elif metadata_score < 60:
-        risk_score += 15
-        reasons.append("Incomplete metadata")
-    
-    # Check if MIME types mismatch (potential corruption)
-    if file_data.get('mime_claimed') != file_data.get('mime_detected'):
-        risk_score += 20
-        reasons.append("File type mismatch (possible corruption)")
-    
-    # Check file age (older files = higher risk if not maintained)
-    # This would need uploaded_at from the actual file record
-    
-    # Cap at 100
-    risk_score = min(risk_score, 100)
-    
-    return risk_score, "; ".join(reasons) if reasons else "Low risk"
 
 def extract_ml_features(file_data):
     """
@@ -631,7 +556,14 @@ def upload_file(vault_id):
         mime_detected = detect_mime_type(file_path)
         mime_claimed = file.content_type or "application/octet-stream"
         
-        # Calculate metadata score
+        # Extract PDF metadata automatically if it's a PDF
+        if file_extension.lower() == 'pdf':
+            pdf_metadata = extract_pdf_metadata(file_path)
+            # Merge PDF metadata with user-provided metadata
+            if pdf_metadata:
+                metadata_json.update(pdf_metadata)
+        
+        # Calculate metadata score with enhanced data
         metadata_score = calculate_metadata_score(metadata_json)
         
         # Check for duplicates in this vault
@@ -640,7 +572,14 @@ def upload_file(vault_id):
             "sha256": sha256_hash
         })
         
-        # Calculate access risk
+        # Calculate access risk using the new function from database.py
+        access_risk_score, access_risk_reason = calculate_access_risk_score(
+            mime_claimed, 
+            mime_detected, 
+            metadata_json
+        )
+        
+        # Prepare data for survivability prediction
         temp_file_data = {
             'ext': file_extension,
             'mime_claimed': mime_claimed,
@@ -648,13 +587,10 @@ def upload_file(vault_id):
             'metadata_score': metadata_score,
             'uploaded_at': datetime.utcnow(),
             'duplicate_count': duplicate_count,
-            'access_count': 0
+            'access_count': 0,
+            'access_risk_score': access_risk_score,
+            'size_bytes': size_bytes
         }
-        access_risk_score, access_risk_reason = calculate_access_risk(temp_file_data)
-        
-        # Add access risk to temp data for survivability prediction
-        temp_file_data['access_risk_score'] = access_risk_score
-        temp_file_data['size_bytes'] = size_bytes
         
         # Predict survivability score using ML model
         survivability_score = predict_survivability(temp_file_data)
