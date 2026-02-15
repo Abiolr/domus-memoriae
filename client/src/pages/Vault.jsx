@@ -300,9 +300,9 @@ export default function Vault() {
                     <div className="meta">
                       <div className="nameRow">
                         <span className="name">{item.original_filename}</span>
-                        {item.access_risk_score && (
-                          <span className={`miniScore ${scoreTone(100 - item.access_risk_score)}`}>
-                            {100 - item.access_risk_score}
+                        {item.survivability_score !== undefined && (
+                          <span className={`miniScore ${scoreTone(item.survivability_score)}`}>
+                            {item.survivability_score}
                           </span>
                         )}
                       </div>
@@ -342,9 +342,9 @@ export default function Vault() {
               <div className="detailsCard">
                 <div className="detailsHeader">
                   <div className="detailsName">{selectedItem.original_filename}</div>
-                  {selectedItem.access_risk_score && (
-                    <div className={`miniScore ${scoreTone(100 - selectedItem.access_risk_score)}`}>
-                      {100 - selectedItem.access_risk_score}
+                  {selectedItem.survivability_score !== undefined && (
+                    <div className={`miniScore ${scoreTone(selectedItem.survivability_score)}`}>
+                      {selectedItem.survivability_score}
                     </div>
                   )}
                 </div>
@@ -355,6 +355,18 @@ export default function Vault() {
                     <>
                       <div className="k">Size</div>
                       <div className="v">{(selectedItem.size_bytes / 1024).toFixed(1)} KB</div>
+                    </>
+                  )}
+                  {selectedItem.survivability_score !== undefined && (
+                    <>
+                      <div className="k">Survivability</div>
+                      <div className="v">{selectedItem.survivability_score}/100</div>
+                    </>
+                  )}
+                  {selectedItem.metadata_score !== undefined && (
+                    <>
+                      <div className="k">Metadata Quality</div>
+                      <div className="v">{selectedItem.metadata_score}/100</div>
                     </>
                   )}
                   {selectedItem.uploaded_at && (
