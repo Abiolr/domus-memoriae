@@ -35,7 +35,7 @@ UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', '/tmp/domus_uploads')
 MAX_FILE_SIZE = 500 * 1024 * 1024  # 500MB max file size
 ALLOWED_EXTENSIONS = {
     # Images
-    'jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'tif', 'webp', 'heic', 'heif',
+    'jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'tif', 'webp', 'heic', 'heif', '.svg',
     # Videos
     'mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'webm', 'm4v', 'mpeg', 'mpg',
     # Documents
@@ -97,6 +97,7 @@ def calculate_sha256(file_path):
 def detect_mime_type(file_path):
     """Detect actual MIME type using python-magic."""
     try:
+        import magic
         mime = magic.Magic(mime=True)
         return mime.from_file(file_path)
     except:
@@ -222,7 +223,10 @@ def register_begin():
         "challenge": challenge,
         "rp": {"name": "Domus Memoriae", "id": "localhost"},
         "user": {"id": secrets.token_urlsafe(16), "name": email, "displayName": data.get('firstName')},
-        "pubKeyCredParams": [{"alg": -7, "type": "public-key"}],
+        "pubKeyCredParams": [
+            {"alg": -7, "type": "public-key"},   # ES256
+            {"alg": -257, "type": "public-key"}  # RS256
+        ],
         "authenticatorSelection": {"authenticatorAttachment": "platform"},
         "timeout": 60000,
         "attestation": "none"
@@ -311,6 +315,30 @@ def check_auth():
         "user_id": session.get('user_id'),
         "session_data": dict(session)
     })
+
+@app.route('/api/users/<user_id>', methods=['GET', 'OPTIONS'])
+@login_required
+def get_user_details(user_id):
+    """Get basic user information (for displaying in member lists)."""
+    if request.method == 'OPTIONS': return '', 204
+    
+    try:
+        user = db.users.find_one(
+            {"_id": ObjectId(user_id)},
+            {"first_name": 1, "last_name": 1, "email": 1, "_id": 1}
+        )
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        
+        return jsonify(stringify_ids({
+            "id": user['_id'],
+            "first_name": user.get('first_name'),
+            "last_name": user.get('last_name'),
+            "email": user.get('email')
+        }))
+    except Exception as e:
+        print(f"[ERROR] Get user failed: {e}")
+        return jsonify({"error": "Failed to retrieve user"}), 500
 
 # ============================================================================
 # Vault Routes
