@@ -1,19 +1,59 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import "../styles/Dashboard.css";
 
 export default function Dashboard() {
   const nav = useNavigate();
 
   return (
-    <div style={{ padding: 24 }}>
-      <h1>Dashboard</h1>
-      <p>Userflow: Dashboard → JoinVault / CreateVault → Vault</p>
+    <div className="dashboard">
+      <div className="background-grain"></div>
+      <div className="background-vignette"></div>
+      
+      <div className="content-wrapper">
+        <header className="dashboard-header">
+          <div className="header-ornament"></div>
+          <h1 className="dashboard-title">Domus Memoriae</h1>
+          <p className="dashboard-subtitle">Your Family Archive</p>
+        </header>
 
-      <button onClick={() => nav("/join-vault")}>Join Vault</button>
-      <div style={{ height: 12 }} />
-      <button onClick={() => nav("/create-vault")}>Create Vault</button>
-      <div style={{ height: 24 }} />
-      <button onClick={() => nav("/")}>Logout → Homepage</button>
+        <main className="dashboard-main">
+          <div className="vault-actions">
+            <button 
+              className="vault-button vault-button-primary" 
+              onClick={() => nav("/join-vault")}
+            >
+              <span className="button-text">Join Vault</span>
+              <span className="button-underline"></span>
+            </button>
+
+            <button 
+              className="vault-button vault-button-primary" 
+              onClick={() => nav("/create-vault")}
+            >
+              <span className="button-text">Create Vault</span>
+              <span className="button-underline"></span>
+            </button>
+          </div>
+
+          <div className="flow-indicator">
+            <span className="flow-text">Dashboard</span>
+            <span className="flow-separator">→</span>
+            <span className="flow-text">Vault Selection</span>
+            <span className="flow-separator">→</span>
+            <span className="flow-text">Archive</span>
+          </div>
+        </main>
+
+        <footer className="dashboard-footer">
+          <button 
+            className="logout-button" 
+            onClick={() => nav("/")}
+          >
+            Sign Out
+          </button>
+        </footer>
+      </div>
     </div>
   );
 }
