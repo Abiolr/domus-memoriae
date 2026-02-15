@@ -50,19 +50,15 @@ export default function Registration() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
-    // Set up passkey
     setIsSettingUpPasskey(true);
 
     try {
       // Check if WebAuthn is supported
       if (!window.PublicKeyCredential) {
-        alert("Passkeys are not supported on this device. Please use a modern browser.");
-        setIsSettingUpPasskey(false);
-        return;
+        throw new Error("Passkeys are not supported on this device. Please use a modern browser.");
       }
 
-      // Collect form data
+      // Collect all form data (Restored from your original structure)
       const formData = {
         email: document.getElementById("email").value,
         phone: document.getElementById("phone").value,
@@ -82,7 +78,7 @@ export default function Registration() {
       const beginRes = await fetch(`${API_BASE_URL}/api/auth/register/begin`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        credentials: "include", // Required for session handling
         body: JSON.stringify(formData),
       });
 
@@ -91,6 +87,7 @@ export default function Registration() {
         throw new Error(beginJson?.error || "Registration begin failed");
       }
 
+      // Map creation options (Handles multiple algorithms ES256/RS256)
       const publicKeyCredentialCreationOptions = {
         challenge: base64urlToUint8Array(beginJson.challenge),
         rp: beginJson.rp,
@@ -104,14 +101,14 @@ export default function Registration() {
         attestation: beginJson.attestation,
       };
 
-      // Create the credential
+      // 2) Create the credential in browser
       const credential = await navigator.credentials.create({
         publicKey: publicKeyCredentialCreationOptions,
       });
 
       console.log("Passkey created successfully:", credential);
 
-      // 2) Send created credential back to backend
+      // 3) Send created credential back to backend
       const completeRes = await fetch(`${API_BASE_URL}/api/auth/register/complete`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -127,22 +124,12 @@ export default function Registration() {
         throw new Error(completeJson?.error || "Registration complete failed");
       }
 
-      // Navigate to dashboard
+      // Final step: Proceed to the vault experience
       nav("/dashboard");
     } catch (error) {
       console.error("Error creating passkey:", error);
-
       const msg = error?.message || "Failed to create passkey. Please try again.";
       setError(msg);
-
-      if (error.name === "NotAllowedError") {
-        alert("Passkey creation was cancelled or not allowed.");
-      } else if (error.name === "InvalidStateError") {
-        alert("A passkey already exists for this account.");
-      } else {
-        alert(msg);
-      }
-
       setIsSettingUpPasskey(false);
     }
   };
@@ -172,7 +159,6 @@ export default function Registration() {
             {/* Contact Information */}
             <div className="form-section">
               <h2 className="section-title">Contact</h2>
-
               <div className="form-row">
                 <div className="form-group">
                   <label className="form-label" htmlFor="email">
@@ -186,7 +172,6 @@ export default function Registration() {
                     required
                   />
                 </div>
-
                 <div className="form-group">
                   <label className="form-label" htmlFor="phone">
                     Phone Number <span className="required">*</span>
@@ -202,10 +187,9 @@ export default function Registration() {
               </div>
             </div>
 
-            {/* Personal Information */}
+            {/* Identity */}
             <div className="form-section">
               <h2 className="section-title">Identity</h2>
-
               <div className="form-row">
                 <div className="form-group">
                   <label className="form-label" htmlFor="firstName">
@@ -219,7 +203,6 @@ export default function Registration() {
                     required
                   />
                 </div>
-
                 <div className="form-group">
                   <label className="form-label" htmlFor="middleNames">
                     Legal Middle Names
@@ -235,16 +218,11 @@ export default function Registration() {
 
               <div className="form-row">
                 <div className="form-group form-group-small">
-                  <label className="form-label" htmlFor="suffix">
-                    Suffix
-                  </label>
+                  <label className="form-label" htmlFor="suffix">Suffix</label>
                   <input className="form-input" type="text" id="suffix" placeholder="Jr., Sr., III" />
                 </div>
-
                 <div className="form-group">
-                  <label className="form-label" htmlFor="maidenName">
-                    Maiden/Birth Name
-                  </label>
+                  <label className="form-label" htmlFor="maidenName">Maiden/Birth Name</label>
                   <input
                     className="form-input"
                     type="text"
@@ -261,11 +239,8 @@ export default function Registration() {
                   </label>
                   <input className="form-input" type="text" id="lastName" placeholder="Family name" required />
                 </div>
-
                 <div className="form-group">
-                  <label className="form-label" htmlFor="preferredName">
-                    Preferred Name
-                  </label>
+                  <label className="form-label" htmlFor="preferredName">Preferred Name</label>
                   <input
                     className="form-input"
                     type="text"
@@ -283,46 +258,36 @@ export default function Registration() {
               </div>
             </div>
 
-            {/* Place of Birth */}
+            {/* Place of Origin */}
             <div className="form-section">
               <h2 className="section-title">Place of Origin</h2>
-
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label" htmlFor="birthCity">
-                    City
-                  </label>
+                  <label className="form-label" htmlFor="birthCity">City</label>
                   <input className="form-input" type="text" id="birthCity" placeholder="City of birth" />
                 </div>
-
                 <div className="form-group">
-                  <label className="form-label" htmlFor="birthState">
-                    Province/State
-                  </label>
+                  <label className="form-label" htmlFor="birthState">Province/State</label>
                   <input className="form-input" type="text" id="birthState" placeholder="Province or state" />
                 </div>
               </div>
-
               <div className="form-group">
-                <label className="form-label" htmlFor="birthCountry">
-                  Country
-                </label>
+                <label className="form-label" htmlFor="birthCountry">Country</label>
                 <input className="form-input" type="text" id="birthCountry" placeholder="Country of birth" />
               </div>
             </div>
 
-            {/* Passkey Setup */}
+            {/* Security */}
             <div className="form-section">
               <h2 className="section-title">Security</h2>
-
               <div className="passkey-info">
                 <p className="passkey-description">
-                  Your family archive will be secured with a passkey—a modern, passwordless authentication method using
-                  your device's biometrics or security key.
+                  Your family archive will be secured with a passkey—modern, 
+                  passwordless authentication using biometrics or security keys.
                 </p>
                 <p className="passkey-note">
-                  After submitting this form, you'll be prompted to set up your passkey using Face ID, Touch ID,
-                  Windows Hello, or your device's security method.
+                  After submitting, you'll be prompted to set up your passkey 
+                  (Face ID, Touch ID, or Windows Hello).
                 </p>
               </div>
             </div>
@@ -337,7 +302,7 @@ export default function Registration() {
 
               <button type="button" className="back-button" onClick={() => nav("/")}>
                 <span className="back-arrow">←</span>
-                <span>Return to Homepage</span>
+                <span>Return Home</span>
               </button>
             </div>
 
