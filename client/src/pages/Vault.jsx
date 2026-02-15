@@ -15,40 +15,74 @@ export default function Vault() {
   const [uploadProgress, setUploadProgress] = useState(null);
 
   const fetchVaultDetails = useCallback(async () => {
+    if (!vaultId) {
+      console.error('[ERROR] No vault ID provided');
+      return;
+    }
+    
     try {
+      console.log('[DEBUG] Fetching vault details for:', vaultId);
       const res = await fetch(`${API_BASE}/vaults/${vaultId}`, { credentials: "include" });
       const data = await res.json();
       if (res.ok) {
         setVaultInfo(data);
         if (data.members) setMembers(data.members);
+        console.log('[DEBUG] Vault details loaded:', data);
+      } else {
+        console.error('[ERROR] Failed to fetch vault details:', data);
       }
     } catch (err) {
       console.error("Failed to fetch vault metadata:", err);
     }
-  }, [vaultId]);
+  }, [vaultId, API_BASE]);
 
   const fetchFiles = useCallback(async () => {
+    if (!vaultId) {
+      console.error('[ERROR] No vault ID provided for file fetch');
+      setIsLoading(false);
+      return;
+    }
+    
     setIsLoading(true);
     try {
+      console.log('[DEBUG] Fetching files for vault:', vaultId);
       const res = await fetch(`${API_BASE}/vaults/${vaultId}/files`, {
         credentials: "include",
       });
       const data = await res.json();
-      if (res.ok) setFiles(data);
+      if (res.ok) {
+        setFiles(data);
+        console.log('[DEBUG] Files loaded:', data.length);
+      } else {
+        console.error('[ERROR] Failed to fetch files:', data);
+      }
     } catch (err) {
       console.error("Failed to fetch files:", err);
     } finally {
       setIsLoading(false);
     }
-  }, [vaultId]);
+  }, [vaultId, API_BASE]);
 
   useEffect(() => {
     if (vaultId) {
+      // Save to localStorage for persistence
       localStorage.setItem("currentVaultId", vaultId);
+      console.log('[DEBUG] Vault ID from URL:', vaultId);
+      
       fetchVaultDetails();
       fetchFiles();
+    } else {
+      console.error('[ERROR] No vaultId in URL params');
+      // Try to get from localStorage as fallback
+      const storedVaultId = localStorage.getItem("currentVaultId");
+      if (storedVaultId) {
+        console.log('[DEBUG] Redirecting to stored vault ID:', storedVaultId);
+        nav(`/vault/${storedVaultId}`, { replace: true });
+      } else {
+        nav("/dashboard", { replace: true });
+      }
     }
-  }, [vaultId, fetchVaultDetails, fetchFiles]);
+  }, [vaultId, fetchVaultDetails, fetchFiles, nav]);
 
   const handleLogout = async () => {
     try {
@@ -68,6 +102,11 @@ export default function Vault() {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    if (!vaultId) {
+      alert("Cannot upload: No vault selected");
+      return;
+    }
+
     setIsUploading(true);
     setUploadProgress(`Uploading ${file.name}...`);
 
@@ -82,6 +121,7 @@ export default function Vault() {
       };
       formData.append('metadata', JSON.stringify(metadata));
 
+      console.log('[DEBUG] Uploading file to vault:', vaultId);
       const res = await fetch(`${API_BASE}/vaults/${vaultId}/files`, {
         method: "POST",
         credentials: "include",
@@ -95,6 +135,7 @@ export default function Vault() {
       }
 
       setUploadProgress("Upload successful!");
+      console.log('[DEBUG] File uploaded successfully:', data);
       
       // Refresh file list
       await fetchFiles();
@@ -158,6 +199,19 @@ export default function Vault() {
     }
   };
 
+  // Show error if no vault ID
+  if (!vaultId) {
+    return (
+      <div className="vaultPage">
+        <div className="background-grain" />
+        <div className="background-vignette" />
+        <div style={{ padding: '40px', textAlign: 'center', color: '#888' }}>
+          <p>No vault selected. Redirecting...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="vaultPage">
       <div className="background-grain" />
@@ -170,6 +224,7 @@ export default function Vault() {
             <p className="vaultSubtitle">FAMILY ARCHIVE</p>
           </div>
           <div className="vaultNavBtns">
+            <button className="ghostBtn" onClick={() => nav("/dashboard")}>Dashboard</button>
             <button className="ghostBtn" onClick={handleLogout}>Logout</button>
           </div>
         </div>

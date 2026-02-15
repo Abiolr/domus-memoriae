@@ -82,17 +82,30 @@ export default function Login() {
       });
       if (!completeRes.ok) throw new Error("Verification failed");
 
-      // 4. Redirect based on vault membership
+      // 4. Fetch user's vaults
       const vaultRes = await fetch(`${API_BASE_URL}/api/vaults`, { credentials: "include" });
       const vaults = await vaultRes.json();
 
+      // 5. Navigate based on vault membership
       if (Array.isArray(vaults) && vaults.length > 0) {
-        localStorage.setItem("currentVaultId", vaults[0].id);
-        nav(`/vault/${vaults[0].id}`);
+        // Get the vault ID properly (it's in _id field due to MongoDB)
+        const vaultId = vaults[0]._id || vaults[0].id;
+        
+        if (vaultId) {
+          localStorage.setItem("currentVaultId", vaultId);
+          console.log('[DEBUG] Navigating to vault:', vaultId);
+          nav(`/vault/${vaultId}`);
+        } else {
+          console.error('[ERROR] Vault ID not found in vault object:', vaults[0]);
+          nav("/dashboard");
+        }
       } else {
+        // No vaults - go to dashboard
+        localStorage.removeItem("currentVaultId");
         nav("/dashboard");
       }
     } catch (err) {
+      console.error('[ERROR] Login failed:', err);
       setError(err.message);
       setIsAuthenticating(false);
     }

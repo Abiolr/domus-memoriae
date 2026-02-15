@@ -97,6 +97,7 @@ def calculate_sha256(file_path):
 def detect_mime_type(file_path):
     """Detect actual MIME type using python-magic."""
     try:
+        import magic
         mime = magic.Magic(mime=True)
         return mime.from_file(file_path)
     except:
@@ -222,7 +223,10 @@ def register_begin():
         "challenge": challenge,
         "rp": {"name": "Domus Memoriae", "id": "localhost"},
         "user": {"id": secrets.token_urlsafe(16), "name": email, "displayName": data.get('firstName')},
-        "pubKeyCredParams": [{"alg": -7, "type": "public-key"}],
+        "pubKeyCredParams": [
+            {"alg": -7, "type": "public-key"},   # ES256
+            {"alg": -257, "type": "public-key"}  # RS256
+        ],
         "authenticatorSelection": {"authenticatorAttachment": "platform"},
         "timeout": 60000,
         "attestation": "none"
