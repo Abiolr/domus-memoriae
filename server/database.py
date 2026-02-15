@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import os
+import random
+import string
 from datetime import datetime, date
 from typing import Any, Dict, Optional, Tuple, Union
 
@@ -42,6 +44,12 @@ def _parse_dob(dob: Union[str, date, datetime]) -> datetime:
         except Exception as e:
             raise ValueError("dob must be 'YYYY-MM-DD'") from e
     raise ValueError("dob must be 'YYYY-MM-DD', date, or datetime")
+
+
+def _generate_invite_code(length: int = 12) -> str:
+    alphabet = string.ascii_uppercase + string.digits
+    return "".join(random.choice(alphabet) for _ in range(length))
+
 
 class Database:
     """
@@ -128,6 +136,9 @@ class Database:
         self.vaults.create_index([("admin_user_id", ASCENDING)])
         self.vaults.create_index([("members.user_id", ASCENDING)])
 
+        # 12-char alphanumeric invite code
+        self.vaults.create_index([("join_code", ASCENDING)], unique=True, sparse=True)
+
         self.folders.create_index([("vault_id", ASCENDING), ("parent_folder_id", ASCENDING)])
         self.files.create_index([("vault_id", ASCENDING), ("folder_id", ASCENDING)])
 
@@ -147,6 +158,7 @@ class Database:
         maiden_birth_name: Optional[str] = None,
         preferred_name: Optional[str] = None,
         place_of_birth: Optional[Dict[str, str]] = None,  # {city,country,province_state}
+        passkey_credential: Optional[Dict[str, Any]] = None,  # WebAuthn credential data
     ) -> Tuple[bool, str, Optional[Dict[str, Any]]]:
         if not all([email, phone, first_name, last_name]):
             return False, "Missing required fields: email, phone, first_name, last_name", None
@@ -170,16 +182,32 @@ class Database:
             "dob": dob_dt,
             "preferred_name": preferred_name.strip() if preferred_name else None,
             "place_of_birth": pob if pob else None,
+            "passkey_credential": passkey_credential,  # Store WebAuthn credential
             "created_at": _now(),
         }
         doc = {k: v for k, v in doc.items() if v is not None}
 
         try:
             res = self.users.insert_one(doc)
-            created = self.users.find_one({"_id": res.inserted_id}, {"email": 1, "phone": 1, "first_name": 1, "last_name": 1})
+            created = self.users.find_one(
+                {"_id": res.inserted_id},
+                {"email": 1, "phone": 1, "first_name": 1, "last_name": 1, "_id": 1},
+            )
             return True, "User created", created
         except DuplicateKeyError:
             return False, "Email or phone already exists", None
+
+    def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
+        """Find a user by email address."""
+        return self.users.find_one({"email": email.strip().lower()})
+
+    def update_user_passkey(self, user_id: Union[str, ObjectId], passkey_credential: Dict[str, Any]) -> Tuple[bool, str]:
+        """Update or add a passkey credential for a user."""
+        uid = _oid(user_id)
+        result = self.users.update_one({"_id": uid}, {"$set": {"passkey_credential": passkey_credential}})
+        if result.modified_count > 0:
+            return True, "Passkey credential updated"
+        return False, "User not found or no changes made"
 
     # -----------------------------
     # Vaults
@@ -189,6 +217,7 @@ class Database:
         *,
         acting_user_id: Union[str, ObjectId],
         name: str,
+        description: Optional[str] = None,
     ) -> Tuple[bool, str, Optional[Dict[str, Any]]]:
         if not name or not name.strip():
             return False, "Vault name is required", None
@@ -197,15 +226,33 @@ class Database:
         if not self.users.find_one({"_id": uid}):
             return False, "acting_user_id not found", None
 
+        # Generate a unique 12-char invite code
+        join_code = None
+        for _ in range(25):
+            candidate = _generate_invite_code(12)
+            if not self.vaults.find_one({"join_code": candidate}, {"_id": 1}):
+                join_code = candidate
+                break
+        if not join_code:
+            return False, "Failed to generate a unique invite code. Try again.", None
+
         doc = {
             "name": name.strip(),
+            "description": description.strip() if description and description.strip() else None,
+            "join_code": join_code,
             "created_at": _now(),
             "created_by": uid,
             "admin_user_id": uid,
             "members": [{"user_id": uid, "role": ROLE_ADMIN, "added_at": _now()}],
         }
+        doc = {k: v for k, v in doc.items() if v is not None}
 
-        res = self.vaults.insert_one(doc)
+        try:
+            res = self.vaults.insert_one(doc)
+        except DuplicateKeyError:
+            # Extremely rare race (invite code collision). Caller can retry.
+            return False, "Invite code collision. Please retry.", None
+
         created = self.vaults.find_one({"_id": res.inserted_id})
         return True, "Vault created", created
 
@@ -231,6 +278,10 @@ class Database:
         if not mem or mem.get("role") != ROLE_ADMIN:
             return False, "Admin privileges required", None
         return True, "OK", vault
+
+    def get_vaults_for_user(self, user_id: Union[str, ObjectId]) -> list[Dict[str, Any]]:
+        uid = _oid(user_id)
+        return list(self.vaults.find({"members.user_id": uid}).sort("created_at", -1))
 
     def add_user_to_vault(
         self,
@@ -262,6 +313,39 @@ class Database:
             {"$push": {"members": {"user_id": target_oid, "role": role, "added_at": _now()}}},
         )
         return True, "User added to vault", self.vaults.find_one({"_id": vid})
+
+    def join_vault_by_code(
+        self,
+        *,
+        acting_user_id: Union[str, ObjectId],
+        join_code: str,
+        role: str = ROLE_VIEWER,
+    ) -> Tuple[bool, str, Optional[Dict[str, Any]]]:
+        """Join a vault using its 12-character invitation code."""
+        if role not in ALLOWED_ROLES:
+            return False, f"Invalid role. Allowed: {sorted(ALLOWED_ROLES)}", None
+
+        if not join_code or not str(join_code).strip():
+            return False, "join_code is required", None
+
+        code = str(join_code).strip().upper()
+        uid = _oid(acting_user_id)
+
+        if not self.users.find_one({"_id": uid}, {"_id": 1}):
+            return False, "acting_user_id not found", None
+
+        vault = self.vaults.find_one({"join_code": code})
+        if not vault:
+            return False, "Invalid invitation code", None
+
+        if self._get_membership(vault, uid):
+            return True, "Already a member of this vault", vault
+
+        self.vaults.update_one(
+            {"_id": vault["_id"]},
+            {"$push": {"members": {"user_id": uid, "role": role, "added_at": _now()}}},
+        )
+        return True, "Joined vault", self.vaults.find_one({"_id": vault["_id"]})
 
     # -----------------------------
     # Folders
@@ -474,6 +558,7 @@ class Database:
 
         self.vaults.update_one({"_id": vid, "members.user_id": target}, {"$set": {"members.$.role": new_role}})
         return True, "Role updated", self.vaults.find_one({"_id": vid})
+
 
 if __name__ == "__main__":
     db = Database()

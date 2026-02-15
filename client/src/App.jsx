@@ -10,20 +10,28 @@ import CreateVault from "./pages/CreateVault.jsx";
 import Vault from "./pages/Vault.jsx";
 
 export default function App() {
+  // Check if a vault ID is saved to make it the default landing page
+  const currentVaultId = localStorage.getItem("currentVaultId");
+
   return (
     <Routes>
-      <Route path="/" element={<Homepage />} />
+      {/* Root path: Redirect to vault if session exists, otherwise show homepage */}
+      <Route 
+        path="/" 
+        element={currentVaultId ? <Navigate to={`/vault/${currentVaultId}`} replace /> : <Homepage />} 
+      />
 
       <Route path="/register" element={<Registration />} />
-
       <Route path="/login" element={<Login />} />
-
+      
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/join-vault" element={<JoinVault />} />
       <Route path="/create-vault" element={<CreateVault />} />
-      <Route path="/vault" element={<Vault />} />
+      
+      {/* Dynamic route for the family archive */}
+      <Route path="/vault/:vaultId" element={<Vault />} />
 
-      {/* fallback */}
+      {/* Fallback to root logic */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

@@ -2,15 +2,45 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/JoinVault.css";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 export default function JoinVault() {
   const nav = useNavigate();
   const [vaultCode, setVaultCode] = useState("");
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleJoinVault = (e) => {
-    e.preventDefault();
-    // Add vault joining logic here
-    nav("/vault");
-  };
+  const handleJoinVault = async (e) => {
+  e.preventDefault();
+  setError("");
+  setIsSubmitting(true);
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/vault/join`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ code: vaultCode.trim().toUpperCase() }),
+    });
+
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setError(json.error || "Failed to join vault");
+      setIsSubmitting(false);
+      return;
+    }
+
+    const vault = json.vault;
+    localStorage.setItem("currentVaultId", vault.id);
+    if (vault.joinCode) localStorage.setItem("vaultJoinCode", vault.joinCode);
+
+    nav("/vault", { state: { vault } });
+  } catch (err) {
+    setError("Network error. Is the backend running?");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <div className="join-vault">
@@ -31,6 +61,8 @@ export default function JoinVault() {
               Enter the invitation code to access a shared archive
             </p>
           </div>
+
+          {error && <div className="join-vault-error">{error}</div>}
 
           <form className="join-vault-form" onSubmit={handleJoinVault}>
             <div className="join-vault-field">
@@ -64,9 +96,10 @@ export default function JoinVault() {
             <div className="join-vault-actions">
               <button
                 type="submit"
+                disabled={isSubmitting}
                 className="join-vault-button join-vault-button-primary"
               >
-                <span className="join-vault-button-text">Join Vault</span>
+                <span className="join-vault-button-text">{isSubmitting ? "Joining..." : "Join Vault"}</span>
                 <span className="join-vault-button-underline"></span>
               </button>
 
