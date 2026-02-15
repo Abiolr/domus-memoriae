@@ -1,0 +1,543 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+
+:root {
+  --parchment: #f4efe4;
+  --ink: #2a2419;
+  --sepia: #8b7355;
+  --aged-gold: #c9a961;
+  --shadow: #1a1410;
+  --whisper: rgba(42, 36, 25, 0.05);
+  --veil: rgba(42, 36, 25, 0.03);
+  --paper: #faf7f2;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Crimson Text', Georgia, serif;
+  background: var(--parchment);
+  color: var(--ink);
+  overflow-x: hidden;
+}
+
+.registration {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 3rem 2rem;
+}
+
+/* Textured background layers */
+.background-grain {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      var(--whisper) 2px,
+      var(--whisper) 4px
+    );
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 1;
+  animation: grain-float 120s linear infinite;
+}
+
+@keyframes grain-float {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(100px); }
+}
+
+.background-vignette {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 0%,
+    transparent 50%,
+    rgba(42, 36, 25, 0.08) 100%
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Registration container */
+.registration-container {
+  position: relative;
+  z-index: 10;
+  max-width: 800px;
+  width: 100%;
+  animation: fade-in 1.2s ease-out;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.registration-card {
+  background: var(--paper);
+  border: 1px solid var(--sepia);
+  padding: 3rem 3rem;
+  box-shadow: 
+    0 2px 4px rgba(42, 36, 25, 0.05),
+    0 8px 24px rgba(42, 36, 25, 0.08);
+  position: relative;
+}
+
+.registration-card::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  right: -1px;
+  bottom: -1px;
+  border: 1px solid var(--aged-gold);
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  pointer-events: none;
+}
+
+.registration-card:hover::before {
+  opacity: 0.3;
+}
+
+/* Header */
+.registration-header {
+  text-align: center;
+  margin-bottom: 3rem;
+  animation: fade-in 1.2s ease-out 0.2s both;
+}
+
+.header-ornament {
+  width: 80px;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--aged-gold),
+    transparent
+  );
+  margin: 0 auto 1.5rem;
+  position: relative;
+}
+
+.header-ornament::before,
+.header-ornament::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 4px;
+  background: var(--aged-gold);
+  border-radius: 50%;
+}
+
+.header-ornament::before {
+  left: 0;
+}
+
+.header-ornament::after {
+  right: 0;
+}
+
+.registration-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 3rem;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  color: var(--ink);
+  margin-bottom: 0.5rem;
+  line-height: 1.1;
+}
+
+.registration-subtitle {
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--sepia);
+  font-family: 'Crimson Text', serif;
+}
+
+/* Form */
+.registration-form {
+  animation: fade-in 1.2s ease-out 0.4s both;
+}
+
+.form-section {
+  margin-bottom: 2.5rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--veil);
+}
+
+.form-section:last-of-type {
+  border-bottom: none;
+  margin-bottom: 2rem;
+}
+
+.section-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+  margin-bottom: 1.5rem;
+  position: relative;
+  padding-bottom: 0.75rem;
+}
+
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 40px;
+  height: 1px;
+  background: var(--aged-gold);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-row:last-child {
+  margin-bottom: 0;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group-small {
+  grid-column: span 1;
+  max-width: 200px;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sepia);
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.required {
+  color: var(--aged-gold);
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--sepia);
+  background: transparent;
+  font-family: 'Crimson Text', Georgia, serif;
+  font-size: 1rem;
+  color: var(--ink);
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.form-input::placeholder {
+  color: var(--sepia);
+  opacity: 0.5;
+  font-style: italic;
+}
+
+.form-input:focus {
+  border-color: var(--aged-gold);
+  box-shadow: 0 0 0 2px rgba(201, 169, 97, 0.1);
+}
+
+.form-input:hover {
+  border-color: var(--aged-gold);
+}
+
+/* Date input styling */
+.form-input[type="date"] {
+  position: relative;
+  cursor: pointer;
+}
+
+.form-input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+
+.form-input[type="date"]:hover::-webkit-calendar-picker-indicator {
+  opacity: 1;
+}
+
+/* Passkey info section */
+.passkey-info {
+  background: var(--whisper);
+  border: 1px solid var(--veil);
+  padding: 1.5rem;
+  border-radius: 2px;
+}
+
+.passkey-description {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--ink);
+  margin-bottom: 1rem;
+  letter-spacing: 0.02em;
+}
+
+.passkey-note {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--sepia);
+  font-style: italic;
+  letter-spacing: 0.02em;
+}
+
+/* Form actions */
+.form-actions {
+  margin-top: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.submit-button {
+  width: 100%;
+  position: relative;
+  background: transparent;
+  border: 1px solid var(--sepia);
+  padding: 1.25rem 2rem;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.25rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.submit-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    var(--whisper) 0%,
+    transparent 100%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.submit-button:hover::before {
+  opacity: 1;
+}
+
+.submit-button:hover {
+  border-color: var(--aged-gold);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(42, 36, 25, 0.12);
+}
+
+.button-text {
+  position: relative;
+  z-index: 2;
+  display: inline-block;
+  transition: transform 0.4s ease;
+}
+
+.submit-button:hover .button-text {
+  transform: translateY(-2px);
+}
+
+.button-underline {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%) scaleX(0);
+  width: 50%;
+  height: 1px;
+  background: var(--aged-gold);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center;
+}
+
+.submit-button:hover .button-underline {
+  transform: translateX(-50%) scaleX(1);
+}
+
+.submit-button:active {
+  transform: translateY(0);
+}
+
+.submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.submit-button:disabled:hover {
+  transform: none;
+  border-color: var(--sepia);
+}
+
+.submit-button:disabled .button-underline {
+  transform: translateX(-50%) scaleX(0);
+}
+
+/* Back button */
+.back-button {
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--veil);
+  padding: 0.875rem 1.5rem;
+  font-family: 'Crimson Text', serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  color: var(--sepia);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.back-button:hover {
+  border-color: var(--sepia);
+  color: var(--ink);
+}
+
+.back-arrow {
+  transition: transform 0.3s ease;
+  display: inline-block;
+}
+
+.back-button:hover .back-arrow {
+  transform: translateX(-4px);
+}
+
+/* Required note */
+.required-note {
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--sepia);
+  font-style: italic;
+  margin-top: 1.5rem;
+  letter-spacing: 0.05em;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .registration {
+    padding: 2rem 1.5rem;
+  }
+
+  .registration-card {
+    padding: 2.5rem 2rem;
+  }
+
+  .registration-title {
+    font-size: 2.5rem;
+  }
+
+  .registration-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .form-group-small {
+    max-width: 100%;
+  }
+
+  .section-title {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .registration {
+    padding: 1.5rem 1rem;
+  }
+
+  .registration-card {
+    padding: 2rem 1.5rem;
+  }
+
+  .registration-title {
+    font-size: 2rem;
+  }
+
+  .form-input {
+    padding: 0.75rem;
+  }
+
+  .submit-button {
+    padding: 1rem 1.5rem;
+    font-size: 1.125rem;
+  }
+
+  .registration-header {
+    margin-bottom: 2rem;
+  }
+
+  .form-section {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+  }
+}
+
+/* Print styles */
+@media print {
+  .background-grain,
+  .background-vignette,
+  .back-button,
+  .submit-button {
+    display: none;
+  }
+
+  .registration-card {
+    border: 2px solid black;
+    box-shadow: none;
+  }
+
+  * {
+    color: black !important;
+    border-color: black !important;
+  }
+}
