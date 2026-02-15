@@ -35,7 +35,7 @@ UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', '/tmp/domus_uploads')
 MAX_FILE_SIZE = 500 * 1024 * 1024  # 500MB max file size
 ALLOWED_EXTENSIONS = {
     # Images
-    'jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'tif', 'webp', 'heic', 'heif',
+    'jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'tif', 'webp', 'heic', 'heif', '.svg',
     # Videos
     'mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'webm', 'm4v', 'mpeg', 'mpg',
     # Documents
