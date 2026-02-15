@@ -39,6 +39,27 @@
   transition: opacity 0.3s ease;
 }
 
+/* Brand row: logo left, text right, vertically centered */
+.brand-row {
+  display: flex;
+  align-items: center;     /* centers logo + text vertically */
+  gap: 0.5rem;
+}
+
+/* Logo */
+.header-logo {
+  height: 130px;            /* make bigger/smaller here */
+   margin-right: -20px;
+   margin-left: -30px;
+}
+
+/* Keeps ornament/title/tagline grouped */
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
 .header-brand:hover {
   opacity: 0.8;
 }
