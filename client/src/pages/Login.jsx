@@ -102,16 +102,51 @@ export default function Login() {
     <>
       <Header isAuthenticated={false} />
       <div className="login">
+        <div className="background-grain"></div>
+        <div className="background-vignette"></div>
+        
         <div className="login-container">
           <div className="login-card">
-            <h1 className="login-title">Domus Memoriae</h1>
+            <header className="login-header">
+              <div className="header-ornament"></div>
+              <h1 className="login-title">Domus Memoriae</h1>
+              <p className="login-subtitle">Enter the Archive</p>
+            </header>
+
             <form className="login-form" onSubmit={handleSubmit}>
-              {error && <div className="form-error" style={{color: 'red'}}>{error}</div>}
-              <input className="form-input" type="email" id="email" placeholder="Email" required />
+              {error && <div className="form-error">{error}</div>}
+              
+              <div className="form-group">
+                <label className="form-label" htmlFor="email">Email</label>
+                <input 
+                  className="form-input" 
+                  type="email" 
+                  id="email" 
+                  placeholder="your.email@example.com"
+                  required
+                  disabled={isAuthenticating}
+                />
+              </div>
+
               <button type="submit" className="login-button" disabled={isAuthenticating}>
-                {isAuthenticating ? "Authenticating..." : "Login with Passkey"}
+                <span className="button-text">
+                  {isAuthenticating ? "Authenticating..." : "Authenticate with Passkey"}
+                </span>
+                <span className="button-underline"></span>
               </button>
             </form>
+
+            <div className="login-divider">
+              <span className="divider-text">or</span>
+            </div>
+
+            <button 
+              className="back-button" 
+              onClick={() => nav("/")}
+            >
+              <span className="back-arrow">←</span>
+              <span>Return to entrance</span>
+            </button>
           </div>
         </div>
       </div>
