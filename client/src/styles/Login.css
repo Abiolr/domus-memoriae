@@ -186,6 +186,18 @@ body {
   animation: fade-in 1.2s ease-out 0.4s both;
 }
 
+.form-error {
+  background: rgba(139, 51, 51, 0.1);
+  border: 1px solid rgba(139, 51, 51, 0.3);
+  color: #8b3333;
+  padding: 0.875rem 1rem;
+  margin-bottom: 1.5rem;
+  font-family: 'Crimson Text', serif;
+  font-size: 0.9rem;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
 .form-group {
   margin-bottom: 1.75rem;
 }
