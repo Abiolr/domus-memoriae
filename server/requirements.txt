@@ -1,5 +1,17 @@
-flask==2.3.3
+# Web Framework and Server
+Flask==3.0.0
 flask-cors==4.0.0
 python-dotenv==1.0.0
-requests==2.32.3
-gunicorn==21.2.0
+Werkzeug==3.0.1
+
+# Database
+pymongo==4.6.1
+
+# Machine Learning and Data Science
+pandas==2.1.3
+numpy==1.26.2
+scikit-learn==1.3.2
+
+# File Processing and Metadata
+python-magic==0.4.27
+pypdf==3.17.1
