@@ -11,6 +11,8 @@ from pymongo import MongoClient, ASCENDING
 from pymongo.collection import Collection
 from pymongo.errors import DuplicateKeyError, ServerSelectionTimeoutError
 from bson import ObjectId
+import magic
+from pypdf import PdfReader
 
 load_dotenv()
 
@@ -49,6 +51,67 @@ def _parse_dob(dob: Union[str, date, datetime]) -> datetime:
 def _generate_invite_code(length: int = 12) -> str:
     alphabet = string.ascii_uppercase + string.digits
     return "".join(random.choice(alphabet) for _ in range(length))
+
+
+def extract_pdf_metadata(file_path: str) -> Dict[str, Any]:
+    """
+    Extracts internal metadata from a PDF file to improve model features.
+    """
+    try:
+        reader = PdfReader(file_path)
+        meta = reader.metadata
+        return {
+            "author": meta.author or "",
+            "title": meta.title or "",
+            "creation_date": str(meta.get("/CreationDate", "")),
+            "description": meta.subject or "",
+            "page_count": len(reader.pages),
+            "creator": meta.creator or "",
+            "is_encrypted": reader.is_encrypted
+        }
+    except Exception as e:
+        print(f"PDF extraction error: {e}")
+        return {}
+
+
+def calculate_metadata_score(metadata_json: Optional[Dict[str, Any]]) -> int:
+    """
+    Calculates score based on presence of key identifying fields.
+    """
+    score = 0
+    if metadata_json:
+        score += 10
+    
+    # Check for specific keys required for high survivability
+    fields_to_check = ['author', 'title', 'creation_date']
+    for field in fields_to_check:
+        if metadata_json and metadata_json.get(field):
+            score += 20
+            
+    if metadata_json and metadata_json.get('description'):
+        score += 30
+    
+    return min(score, 100)
+
+
+def calculate_access_risk_score(mime_claimed: str, mime_detected: str, metadata_json: Optional[Dict[str, Any]]) -> Tuple[int, str]:
+    """
+    Calculates risk based on file inconsistencies.
+    """
+    score = 0
+    reasons = []
+    
+    # 40-point penalty for MIME mismatch
+    if mime_claimed != mime_detected:
+        score += 40
+        reasons.append("File type mismatch (possible corruption)")
+    
+    # 10-point penalty for missing metadata context
+    if not metadata_json or len(metadata_json) <= 1:  # 1 because of base {}
+        score += 10
+        reasons.append("Poor metadata (hard to identify)")
+        
+    return score, "; ".join(reasons) if reasons else "Low risk"
 
 
 class Database:
