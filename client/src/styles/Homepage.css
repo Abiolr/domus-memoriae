@@ -1,0 +1,540 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+
+:root {
+  --parchment: #f4efe4;
+  --ink: #2a2419;
+  --sepia: #8b7355;
+  --aged-gold: #c9a961;
+  --shadow: #1a1410;
+  --whisper: rgba(42, 36, 25, 0.05);
+  --veil: rgba(42, 36, 25, 0.03);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Crimson Text', Georgia, serif;
+  background: var(--parchment);
+  color: var(--ink);
+  overflow-x: hidden;
+}
+
+.home {
+  min-height: 100vh;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 2rem;
+
+  background-image: url("../assets/derrick_adams_family_portrait_no_6.webp"); /*DERRICK ADAMS, "Family Portrait #6," 2019 (oil on canvas) */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;  
+}
+
+.home::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(244, 239, 228, 0.75);
+  z-index: 0;
+}
+
+/* Background layers */
+.home-grain {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      var(--whisper) 2px,
+      var(--whisper) 4px
+    );
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 1;
+  animation: home-grain-float 120s linear infinite;
+}
+
+@keyframes home-grain-float {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(100px); }
+}
+
+.home-vignette {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 0%,
+    transparent 50%,
+    rgba(42, 36, 25, 0.08) 100%
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Wrapper */
+.home-wrapper {
+  position: relative;
+  z-index: 10;
+  max-width: 680px;
+  width: 100%;
+  animation: home-fade-in 1.2s ease-out;
+}
+
+@keyframes home-fade-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Header */
+.home-header {
+  text-align: center;
+  margin-bottom: 4rem;
+  position: relative;
+  animation: home-fade-in 1.2s ease-out 0.2s both;
+}
+
+.home-ornament {
+  width: 80px;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--aged-gold), transparent);
+  margin: 0 auto 2rem;
+  position: relative;
+}
+
+.home-ornament::before,
+.home-ornament::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 4px;
+  background: var(--aged-gold);
+  border-radius: 50%;
+}
+
+.home-ornament::before { left: 0; }
+.home-ornament::after { right: 0; }
+
+.home-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 3.5rem;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  color: var(--ink);
+  margin-bottom: 0.5rem;
+  line-height: 1.1;
+}
+
+.home-subtitle {
+  font-size: 1.125rem;
+  font-weight: 400;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--sepia);
+  font-family: 'Crimson Text', serif;
+}
+
+/* Main */
+.home-main {
+  animation: home-fade-in 1.2s ease-out 0.4s both;
+}
+
+.home-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+/* Button */
+.home-button {
+  position: relative;
+  background: transparent;
+  border: 1px solid var(--sepia);
+  padding: 1.5rem 3rem;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  text-align: center;
+}
+
+.home-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--whisper) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.home-button:hover::before {
+  opacity: 1;
+}
+
+/* Soft gold hover + sparkles */
+.home-button::after {
+  content: "";
+  position: absolute;
+  top: -60%;
+  left: -60%;
+  width: 220%;
+  height: 220%;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.55) 1px, transparent 1px);
+  background-size: 44px 44px;
+  opacity: 0;
+  pointer-events: none;
+  transform: rotate(18deg);
+  transition: opacity 0.35s ease;
+}
+
+.home-button:hover {
+  background-color: rgba(201, 169, 97, 0.22);
+  border-color: var(--aged-gold);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(42, 36, 25, 0.12);
+}
+
+.home-button:hover::after {
+  opacity: 0.18;
+  animation: home-sparkle-move 3s linear infinite;
+}
+
+@keyframes home-sparkle-move {
+  from { background-position: 0 0; }
+  to { background-position: 70px 70px; }
+}
+
+.home-button:active {
+  transform: translateY(0);
+}
+
+.home-button-text {
+  position: relative;
+  z-index: 2;
+  display: inline-block;
+  transition: transform 0.4s ease;
+}
+
+.home-button:hover .home-button-text {
+  transform: translateY(-2px);
+}
+
+.home-button-underline {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%) scaleX(0);
+  width: 60%;
+  height: 1px;
+  background: var(--aged-gold);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center;
+  z-index: 2;
+}
+
+.home-button:hover .home-button-underline {
+  transform: translateX(-50%) scaleX(1);
+}
+
+/* Scroll Indicator */
+.home-scroll-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 4rem;
+  opacity: 0.7;
+  animation: home-fade-in 1.2s ease-out 0.6s both;
+}
+
+.home-scroll-line {
+  width: 1px;
+  height: 60px;
+  background: linear-gradient(to bottom, transparent, var(--sepia), transparent);
+  position: relative;
+  animation: home-scroll-pulse 2s ease-in-out infinite;
+}
+
+@keyframes home-scroll-pulse {
+  0%, 100% { opacity: 0.4; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(10px); }
+}
+
+.home-scroll-text {
+  font-family: 'Crimson Text', serif;
+  font-size: 0.875rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--sepia);
+  font-weight: 400;
+}
+
+/* Hero Section */
+.home-hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6rem 2rem;
+  background: var(--parchment);
+  z-index: 5;
+}
+
+.home-hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background: linear-gradient(to bottom, rgba(244, 239, 228, 0) 0%, var(--parchment) 100%);
+  z-index: 1;
+}
+
+.home-hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 900px;
+  width: 100%;
+  animation: home-fade-in 1s ease-out;
+}
+
+.home-hero-ornament {
+  width: 120px;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--aged-gold), transparent);
+  margin: 0 auto 3rem;
+  position: relative;
+}
+
+.home-hero-ornament::before,
+.home-hero-ornament::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 5px;
+  height: 5px;
+  background: var(--aged-gold);
+  border-radius: 50%;
+}
+
+.home-hero-ornament::before { left: 0; }
+.home-hero-ornament::after { right: 0; }
+
+.home-hero-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 3rem;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  color: var(--ink);
+  text-align: center;
+  margin-bottom: 3rem;
+  line-height: 1.2;
+}
+
+.home-hero-text {
+  margin-bottom: 4rem;
+  text-align: center;
+}
+
+.home-hero-paragraph {
+  font-family: 'Crimson Text', serif;
+  font-size: 1.25rem;
+  line-height: 1.8;
+  color: var(--ink);
+  margin-bottom: 1.5rem;
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.home-hero-paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.home-hero-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 3rem;
+  margin-top: 4rem;
+}
+
+.home-hero-feature {
+  text-align: center;
+  padding: 2rem 1.5rem;
+  border: 1px solid rgba(139, 115, 85, 0.2);
+  background: rgba(244, 239, 228, 0.5);
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.home-hero-feature::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--whisper) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.home-hero-feature:hover {
+  border-color: var(--aged-gold);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(42, 36, 25, 0.08);
+}
+
+.home-hero-feature:hover::before {
+  opacity: 1;
+}
+
+.home-hero-feature-icon {
+  font-size: 1.5rem;
+  color: var(--aged-gold);
+  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.home-hero-feature-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: var(--ink);
+  margin-bottom: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.home-hero-feature-desc {
+  font-family: 'Crimson Text', serif;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--sepia);
+  position: relative;
+  z-index: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .home-title { font-size: 2.5rem; }
+  .home-subtitle { font-size: 0.95rem; }
+
+  .home-button {
+    padding: 1.25rem 2rem;
+    font-size: 1.25rem;
+  }
+
+  .home-scroll-indicator {
+    margin-top: 3rem;
+  }
+
+  .home-scroll-line {
+    height: 50px;
+  }
+
+  .home-hero {
+    padding: 4rem 2rem;
+  }
+
+  .home-hero-title {
+    font-size: 2.25rem;
+  }
+
+  .home-hero-paragraph {
+    font-size: 1.125rem;
+  }
+
+  .home-hero-features {
+    gap: 2rem;
+  }
+
+  .home-hero-feature {
+    padding: 1.5rem 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .home { padding: 1.5rem; }
+  .home-title { font-size: 2rem; }
+
+  .home-button {
+    padding: 1rem 1.5rem;
+    font-size: 1.125rem;
+  }
+
+  .home-header { margin-bottom: 3rem; }
+
+  .home-scroll-indicator {
+    margin-top: 2.5rem;
+  }
+
+  .home-scroll-line {
+    height: 40px;
+  }
+
+  .home-scroll-text {
+    font-size: 0.75rem;
+  }
+
+  .home-hero {
+    padding: 3rem 1.5rem;
+  }
+
+  .home-hero-title {
+    font-size: 1.875rem;
+    margin-bottom: 2rem;
+  }
+
+  .home-hero-paragraph {
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  .home-hero-text {
+    margin-bottom: 3rem;
+  }
+
+  .home-hero-features {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .home-hero-feature-title {
+    font-size: 1.25rem;
+  }
+
+  .home-hero-feature-desc {
+    font-size: 0.9375rem;
+  }
+}
+
+
+
+
