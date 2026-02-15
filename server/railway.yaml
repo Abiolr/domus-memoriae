@@ -1,7 +1,7 @@
 services:
   - type: web
-    name: domus-memoriae-api
+    :contentReference[oaicite:4]{index=4}api
     env: python
-    buildCommand: ""
+    buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
     plan: free
