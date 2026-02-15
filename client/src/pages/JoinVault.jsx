@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 import "../styles/JoinVault.css";
 
-// Use environment variables or default to localhost
 const API_BASE_URL = import.meta.env?.VITE_API_URL || "http://localhost:5000";
 
 export default function JoinVault() {
@@ -32,7 +33,6 @@ export default function JoinVault() {
         return;
       }
 
-      // Check if vault object and id exist in response
       if (json.vault && json.vault.id) {
         localStorage.setItem("currentVaultId", json.vault.id);
         nav(`/vault/${json.vault.id}`);
@@ -47,46 +47,67 @@ export default function JoinVault() {
   };
 
   return (
-    <div className="join-vault">
-      <div className="join-vault-grain"></div>
-      <div className="join-vault-vignette"></div>
+    <>
+      <Header isAuthenticated={true} />
+      <div className="join-vault">
+        <div className="background-grain"></div>
+        <div className="background-vignette"></div>
 
-      <div className="join-vault-container">
-        <button className="join-vault-back" onClick={() => nav("/dashboard")}>
-          ← Return to Dashboard
-        </button>
+        <div className="join-vault-container">
+          <div className="join-vault-card">
+            <header className="join-vault-header">
+              <div className="header-ornament"></div>
+              <h1 className="join-vault-title">Join a Family Vault</h1>
+              <p className="join-vault-subtitle">Enter the invitation code provided by the administrator</p>
+            </header>
 
-        <div className="join-vault-card">
-          <div className="join-vault-header">
-            <div className="join-vault-ornament"></div>
-            <h1 className="join-vault-title">Join a Family Vault</h1>
-            <p className="join-vault-subtitle">Enter the invitation code provided by the administrator</p>
+            {error && (
+              <div className="form-error">{error}</div>
+            )}
+
+            <form className="join-vault-form" onSubmit={handleJoinVault}>
+              <div className="form-group">
+                <label className="form-label" htmlFor="vaultCode">
+                  Invitation Code <span className="required">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="vaultCode"
+                  className="form-input"
+                  placeholder="ABCD1234EFGH"
+                  value={vaultCode}
+                  onChange={(e) => setVaultCode(e.target.value.toUpperCase())}
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              <div className="form-actions">
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting} 
+                  className="submit-button"
+                >
+                  <span className="button-text">
+                    {isSubmitting ? "Joining..." : "Join Vault"}
+                  </span>
+                  <span className="button-underline"></span>
+                </button>
+
+                <button 
+                  type="button"
+                  className="back-button" 
+                  onClick={() => nav("/dashboard")}
+                >
+                  <span className="back-arrow">←</span>
+                  <span>Return to dashboard</span>
+                </button>
+              </div>
+            </form>
           </div>
-
-          {error && <div className="join-vault-error" style={{color: '#ff4d4d', padding: '10px', backgroundColor: 'rgba(255,0,0,0.1)', borderRadius: '4px', marginBottom: '1rem'}}>{error}</div>}
-
-          <form className="join-vault-form" onSubmit={handleJoinVault}>
-            <div className="join-vault-field">
-              <label className="join-vault-label">Invitation Code</label>
-              <input
-                type="text"
-                className="join-vault-input"
-                placeholder="Ex: ABCD-1234-EFGH"
-                value={vaultCode}
-                onChange={(e) => setVaultCode(e.target.value.toUpperCase())}
-                required
-                disabled={isSubmitting}
-              />
-            </div>
-
-            <div className="join-vault-actions">
-              <button type="submit" disabled={isSubmitting} className="join-vault-button join-vault-button-primary">
-                {isSubmitting ? "Processing..." : "Join Vault"}
-              </button>
-            </div>
-          </form>
         </div>
       </div>
-    </div>
+      <Footer />
+    </>
   );
 }

@@ -316,6 +316,30 @@ def check_auth():
         "session_data": dict(session)
     })
 
+@app.route('/api/users/<user_id>', methods=['GET', 'OPTIONS'])
+@login_required
+def get_user_details(user_id):
+    """Get basic user information (for displaying in member lists)."""
+    if request.method == 'OPTIONS': return '', 204
+    
+    try:
+        user = db.users.find_one(
+            {"_id": ObjectId(user_id)},
+            {"first_name": 1, "last_name": 1, "email": 1, "_id": 1}
+        )
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        
+        return jsonify(stringify_ids({
+            "id": user['_id'],
+            "first_name": user.get('first_name'),
+            "last_name": user.get('last_name'),
+            "email": user.get('email')
+        }))
+    except Exception as e:
+        print(f"[ERROR] Get user failed: {e}")
+        return jsonify({"error": "Failed to retrieve user"}), 500
+
 # ============================================================================
 # Vault Routes
 # ============================================================================
