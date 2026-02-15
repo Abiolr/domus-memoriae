@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 import "../styles/Login.css";
 
 export default function Login() {
@@ -59,7 +61,9 @@ export default function Login() {
   };
 
   return (
-    <div className="login">
+    <>
+      <Header isAuthenticated={false} />
+      <div className="login">
       <div className="background-grain"></div>
       <div className="background-vignette"></div>
       
@@ -106,5 +110,7 @@ export default function Login() {
         </div>
       </div>
     </div>
+      <Footer />
+    </>
   );
 }

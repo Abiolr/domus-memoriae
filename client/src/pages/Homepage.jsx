@@ -1,12 +1,22 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 import "../styles/Homepage.css";
 
 export default function Homepage() {
   const nav = useNavigate();
 
+  const scrollToHero = () => {
+    const heroSection = document.querySelector('.home-hero');
+    if (heroSection) {
+      heroSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <>
+      <Header isAuthenticated={false} />
       <div className="home">
         <div className="home-grain"></div>
         <div className="home-vignette"></div>
@@ -21,20 +31,7 @@ export default function Homepage() {
           </header>
 
           <main className="home-main">
-            <div className="home-actions">
-              <button className="home-button" onClick={() => nav("/register")}>
-                <span className="home-button-text">Register</span>
-                <span className="home-button-underline"></span>
-              </button>
-
-              <button className="home-button" onClick={() => nav("/login")}>
-                <span className="home-button-text">Login</span>
-                <span className="home-button-underline"></span>
-              </button>
-            </div>
-
-            <div className="home-scroll-indicator">
-              <div className="home-scroll-line"></div>
+            <div className="home-scroll-indicator" onClick={scrollToHero}>
               <span className="home-scroll-text">Discover More</span>
             </div>
           </main>
@@ -100,6 +97,7 @@ export default function Homepage() {
           </div>
         </div>
       </section>
+      <Footer />
     </>
   );
 }

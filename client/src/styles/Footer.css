@@ -1,0 +1,270 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+
+:root {
+  --parchment: #f4efe4;
+  --ink: #2a2419;
+  --sepia: #8b7355;
+  --aged-gold: #c9a961;
+  --shadow: #1a1410;
+  --whisper: rgba(42, 36, 25, 0.05);
+  --veil: rgba(42, 36, 25, 0.03);
+  --paper: #faf7f2;
+}
+
+.site-footer {
+  background: var(--paper);
+  border-top: 1px solid var(--sepia);
+  padding: 3rem 2rem 2rem;
+  margin-top: auto;
+}
+
+.footer-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+  gap: 3rem;
+  margin-bottom: 2rem;
+}
+
+/* Footer brand section */
+.footer-brand {
+  max-width: 320px;
+}
+
+.footer-ornament {
+  width: 60px;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--aged-gold),
+    transparent
+  );
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.footer-ornament::before,
+.footer-ornament::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 3px;
+  background: var(--aged-gold);
+  border-radius: 50%;
+}
+
+.footer-ornament::before {
+  left: 0;
+}
+
+.footer-ornament::after {
+  right: 0;
+}
+
+.footer-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  color: var(--ink);
+  margin-bottom: 0.75rem;
+}
+
+.footer-description {
+  font-family: 'Crimson Text', serif;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--sepia);
+  font-style: italic;
+  letter-spacing: 0.02em;
+}
+
+/* Footer sections */
+.footer-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.footer-heading {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.125rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+}
+
+.footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.footer-link {
+  font-family: 'Crimson Text', serif;
+  font-size: 0.95rem;
+  color: var(--sepia);
+  text-decoration: none;
+  transition: all 0.3s ease;
+  position: relative;
+  display: inline-block;
+  letter-spacing: 0.02em;
+}
+
+.footer-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--aged-gold);
+  transition: width 0.3s ease;
+}
+
+.footer-link:hover {
+  color: var(--ink);
+}
+
+.footer-link:hover::after {
+  width: 100%;
+}
+
+/* Footer divider */
+.footer-divider {
+  max-width: 1400px;
+  margin: 2rem auto;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--sepia) 10%,
+    var(--sepia) 90%,
+    transparent
+  );
+  opacity: 0.3;
+}
+
+/* Footer bottom */
+.footer-bottom {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.footer-copyright {
+  font-family: 'Crimson Text', serif;
+  font-size: 0.875rem;
+  color: var(--sepia);
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.footer-note {
+  font-family: 'Crimson Text', serif;
+  font-size: 0.875rem;
+  color: var(--sepia);
+  font-style: italic;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .footer-content {
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 2.5rem;
+  }
+
+  .footer-section:nth-child(4),
+  .footer-section:nth-child(5) {
+    grid-column: span 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .site-footer {
+    padding: 2.5rem 1.5rem 1.5rem;
+  }
+
+  .footer-content {
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+
+  .footer-brand {
+    grid-column: span 2;
+    max-width: 100%;
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .site-footer {
+    padding: 2rem 1rem 1rem;
+  }
+
+  .footer-content {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .footer-brand {
+    grid-column: span 1;
+  }
+
+  .footer-title {
+    font-size: 1.25rem;
+  }
+
+  .footer-description {
+    font-size: 0.875rem;
+  }
+
+  .footer-heading {
+    font-size: 0.8rem;
+  }
+
+  .footer-link {
+    font-size: 0.875rem;
+  }
+
+  .footer-copyright,
+  .footer-note {
+    font-size: 0.8rem;
+  }
+}
+
+/* Print styles */
+@media print {
+  .site-footer {
+    border-top: 2px solid black;
+  }
+
+  .footer-link {
+    color: black;
+  }
+
+  * {
+    color: black !important;
+    border-color: black !important;
+  }
+}
