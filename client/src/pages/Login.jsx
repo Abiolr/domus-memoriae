@@ -158,7 +158,7 @@ export default function Login() {
               onClick={() => nav("/")}
             >
               <span className="back-arrow">←</span>
-              <span>Return to entrance</span>
+              <span>Return to homepage</span>
             </button>
           </div>
         </div>

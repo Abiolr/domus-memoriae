@@ -14,7 +14,7 @@
 .site-header {
   background: var(--paper);
   border-bottom: 1px solid var(--sepia);
-  padding: 1.5rem 2rem;
+  padding: 0rem 0rem;
   position: sticky;
   top: 0;
   z-index: 100;
