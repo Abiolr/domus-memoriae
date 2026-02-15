@@ -35,14 +35,6 @@ export default function Dashboard() {
               <span className="button-underline"></span>
             </button>
           </div>
-
-          <div className="flow-indicator">
-            <span className="flow-text">Dashboard</span>
-            <span className="flow-separator">→</span>
-            <span className="flow-text">Vault Selection</span>
-            <span className="flow-separator">→</span>
-            <span className="flow-text">Archive</span>
-          </div>
         </main>
 
         <footer className="dashboard-footer">

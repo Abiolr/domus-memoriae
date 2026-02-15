@@ -238,42 +238,6 @@ body {
   transform: translateY(0);
 }
 
-/* Flow indicator */
-.flow-indicator {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  padding: 2rem 0;
-  border-top: 1px solid var(--veil);
-  border-bottom: 1px solid var(--veil);
-  margin: 2rem 0;
-}
-
-.flow-text {
-  font-size: 0.875rem;
-  letter-spacing: 0.1em;
-  color: var(--sepia);
-  font-style: italic;
-}
-
-.flow-separator {
-  color: var(--aged-gold);
-  font-size: 0.875rem;
-  animation: pulse-arrow 2s ease-in-out infinite;
-}
-
-@keyframes pulse-arrow {
-  0%, 100% {
-    opacity: 0.6;
-    transform: translateX(0);
-  }
-  50% {
-    opacity: 1;
-    transform: translateX(3px);
-  }
-}
-
 /* Footer */
 .dashboard-footer {
   text-align: center;
@@ -328,15 +292,6 @@ body {
   .vault-button {
     padding: 1.25rem 2rem;
     font-size: 1.25rem;
-  }
-
-  .flow-indicator {
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  .flow-text {
-    font-size: 0.75rem;
   }
 }
 
