@@ -1,0 +1,222 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+
+:root {
+  --parchment: #f4efe4;
+  --ink: #2a2419;
+  --sepia: #8b7355;
+  --aged-gold: #c9a961;
+  --shadow: #1a1410;
+  --whisper: rgba(42, 36, 25, 0.05);
+  --veil: rgba(42, 36, 25, 0.03);
+  --paper: #faf7f2;
+}
+
+.site-header {
+  background: var(--paper);
+  border-bottom: 1px solid var(--sepia);
+  padding: 1.5rem 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(42, 36, 25, 0.05);
+}
+
+.header-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+}
+
+/* Brand */
+.header-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+}
+
+.header-brand:hover {
+  opacity: 0.8;
+}
+
+.brand-ornament {
+  width: 40px;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--aged-gold),
+    transparent
+  );
+  margin-bottom: 0.5rem;
+  position: relative;
+}
+
+.brand-ornament::before,
+.brand-ornament::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 3px;
+  background: var(--aged-gold);
+  border-radius: 50%;
+}
+
+.brand-ornament::before {
+  left: 0;
+}
+
+.brand-ornament::after {
+  right: 0;
+}
+
+.brand-name {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.75rem;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  color: var(--ink);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.brand-tagline {
+  font-family: 'Crimson Text', serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--sepia);
+  margin: 0.25rem 0 0;
+}
+
+/* Navigation */
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nav-link {
+  background: transparent;
+  border: none;
+  font-family: 'Crimson Text', serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  color: var(--sepia);
+  cursor: pointer;
+  padding: 0.625rem 1.25rem;
+  transition: all 0.3s ease;
+  position: relative;
+  text-transform: uppercase;
+  font-weight: 400;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0.25rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 1px;
+  background: var(--aged-gold);
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover {
+  color: var(--ink);
+}
+
+.nav-link:hover::after {
+  width: 60%;
+}
+
+.nav-link.active {
+  color: var(--ink);
+}
+
+.nav-link.active::after {
+  width: 60%;
+}
+
+.nav-link-primary {
+  border: 1px solid var(--sepia);
+  padding: 0.625rem 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.nav-link-primary::after {
+  display: none;
+}
+
+.nav-link-primary:hover {
+  border-color: var(--aged-gold);
+  background: var(--whisper);
+  transform: translateY(-1px);
+}
+
+.nav-link-secondary {
+  color: var(--sepia);
+  opacity: 0.8;
+}
+
+.nav-link-secondary:hover {
+  opacity: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .site-header {
+    padding: 1.25rem 1.5rem;
+  }
+
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+
+  .brand-name {
+    font-size: 1.5rem;
+  }
+
+  .brand-tagline {
+    font-size: 0.7rem;
+  }
+
+  .header-nav {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .nav-link {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+  }
+
+  .nav-link-primary {
+    padding: 0.5rem 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .site-header {
+    padding: 1rem;
+  }
+
+  .brand-name {
+    font-size: 1.25rem;
+  }
+
+  .nav-link {
+    font-size: 0.8rem;
+    padding: 0.5rem 0.875rem;
+  }
+}

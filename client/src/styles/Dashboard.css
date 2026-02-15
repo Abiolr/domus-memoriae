@@ -93,69 +93,10 @@ body {
   }
 }
 
-/* Header */
-.dashboard-header {
-  text-align: center;
-  margin-bottom: 4rem;
-  position: relative;
-  animation: fade-in 1.2s ease-out 0.2s both;
-}
-
-.header-ornament {
-  width: 80px;
-  height: 1px;
-  background: linear-gradient(
-    to right,
-    transparent,
-    var(--aged-gold),
-    transparent
-  );
-  margin: 0 auto 2rem;
-  position: relative;
-}
-
-.header-ornament::before,
-.header-ornament::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 4px;
-  height: 4px;
-  background: var(--aged-gold);
-  border-radius: 50%;
-}
-
-.header-ornament::before {
-  left: 0;
-}
-
-.header-ornament::after {
-  right: 0;
-}
-
-.dashboard-title {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 3.5rem;
-  font-weight: 300;
-  letter-spacing: 0.05em;
-  color: var(--ink);
-  margin-bottom: 0.5rem;
-  line-height: 1.1;
-}
-
-.dashboard-subtitle {
-  font-size: 1.125rem;
-  font-weight: 400;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--sepia);
-  font-family: 'Crimson Text', serif;
-}
-
 /* Main content */
 .dashboard-main {
   animation: fade-in 1.2s ease-out 0.4s both;
+  padding: 2rem 0;
 }
 
 .vault-actions {
@@ -236,47 +177,6 @@ body {
 
 .vault-button:active {
   transform: translateY(0);
-}
-
-/* Footer */
-.dashboard-footer {
-  text-align: center;
-  margin-top: 3rem;
-  animation: fade-in 1.2s ease-out 0.6s both;
-}
-
-.logout-button {
-  background: transparent;
-  border: none;
-  font-family: 'Crimson Text', serif;
-  font-size: 0.9rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--sepia);
-  cursor: pointer;
-  padding: 0.75rem 2rem;
-  position: relative;
-  transition: color 0.3s ease;
-}
-
-.logout-button::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 1px;
-  background: var(--sepia);
-  transition: width 0.3s ease;
-}
-
-.logout-button:hover {
-  color: var(--ink);
-}
-
-.logout-button:hover::after {
-  width: 100%;
 }
 
 /* Responsive design */

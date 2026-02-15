@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 import "../styles/Registration.css";
 
 export default function Registration() {
@@ -77,7 +79,9 @@ export default function Registration() {
   };
 
   return (
-    <div className="registration">
+    <>
+      <Header isAuthenticated={false} />
+      <div className="registration">
       <div className="background-grain"></div>
       <div className="background-vignette"></div>
       
@@ -306,5 +310,7 @@ export default function Registration() {
         </div>
       </div>
     </div>
+      <Footer />
+    </>
   );
 }

@@ -3,7 +3,6 @@ import { Routes, Route, Navigate } from "react-router-dom";
 
 import Homepage from "./pages/Homepage.jsx";
 import Registration from "./pages/Registration.jsx";
-import Onboarding from "./pages/Onboarding.jsx";
 import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import JoinVault from "./pages/JoinVault.jsx";
@@ -16,7 +15,6 @@ export default function App() {
       <Route path="/" element={<Homepage />} />
 
       <Route path="/register" element={<Registration />} />
-      <Route path="/onboarding" element={<Onboarding />} />
 
       <Route path="/login" element={<Login />} />
 
