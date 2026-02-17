@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import API_BASE_URL from "../api";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -16,7 +17,7 @@ export default function CreateVault() {
     setError(null);
 
     try {
-      const response = await fetch("http://localhost:5000/api/vault/create", {
+      const response = await fetch(`${API_BASE_URL}/api/vault/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include", 

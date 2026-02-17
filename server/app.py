@@ -42,6 +42,14 @@ except Exception as e:
 # Explicitly define the frontend URL for CORS and Cookie trust
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
 
+# Production detection — set IS_PRODUCTION=true in Railway env vars
+IS_PRODUCTION = os.environ.get('IS_PRODUCTION', 'false').lower() == 'true'
+
+# WebAuthn Relying Party ID — must match the domain the frontend is served from
+# In production this should be your Vercel domain, e.g. "domus-memoriae.vercel.app"
+RP_ID = os.environ.get('RP_ID', 'localhost')
+RP_NAME = os.environ.get('RP_NAME', 'Domus Memoriae')
+
 CORS(app, 
      supports_credentials=True, 
      origins=[FRONTEND_URL],
@@ -75,15 +83,26 @@ app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # --- SESSION & COOKIE CONFIGURATION ---
-# These settings allow the session cookie to persist across different ports on localhost
-app.config.update(
-    SESSION_COOKIE_SECURE=False,   # Must be False for HTTP (Localhost)
-    SESSION_COOKIE_HTTPONLY=True,  # Prevents JS access to the session cookie
-    SESSION_COOKIE_SAMESITE='Lax', # Allows the cookie to be sent during cross-origin POSTs
-    SESSION_COOKIE_DOMAIN='localhost',  # Explicit domain for localhost
-    SESSION_COOKIE_PATH='/',  # Cookie valid for all paths
-    PERMANENT_SESSION_LIFETIME=timedelta(days=7)
-)
+# In production: cookies must be Secure (HTTPS) and SameSite=None for cross-origin requests
+# In development: Secure=False, SameSite=Lax works fine over HTTP on localhost
+if IS_PRODUCTION:
+    app.config.update(
+        SESSION_COOKIE_SECURE=True,      # Required for HTTPS
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE='None',  # Required for cross-origin (Vercel -> Railway)
+        SESSION_COOKIE_DOMAIN=None,      # Let Flask set the cookie for the Railway domain
+        SESSION_COOKIE_PATH='/',
+        PERMANENT_SESSION_LIFETIME=timedelta(days=7)
+    )
+else:
+    app.config.update(
+        SESSION_COOKIE_SECURE=False,
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE='Lax',
+        SESSION_COOKIE_DOMAIN='localhost',
+        SESSION_COOKIE_PATH='/',
+        PERMANENT_SESSION_LIFETIME=timedelta(days=7)
+    )
 
 try:
     db = Database()
@@ -286,7 +305,7 @@ def register_begin():
     
     return jsonify({
         "challenge": challenge,
-        "rp": {"name": "Domus Memoriae", "id": "localhost"},
+        "rp": {"name": RP_NAME, "id": RP_ID},
         "user": {"id": secrets.token_urlsafe(16), "name": email, "displayName": data.get('firstName')},
         "pubKeyCredParams": [
             {"alg": -7, "type": "public-key"},   # ES256
@@ -345,7 +364,7 @@ def login_begin():
     
     return jsonify({
         "challenge": challenge,
-        "rpId": "localhost",
+        "rpId": RP_ID,
         "allowCredentials": [] 
     })
 

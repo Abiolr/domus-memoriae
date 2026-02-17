@@ -5,10 +5,7 @@ import Footer from "../components/Footer";
 import "../styles/Registration.css";
 
 // Works for Vite (import.meta.env) and CRA (process.env)
-const API_BASE_URL =
-  (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL) ||
-  (typeof process !== "undefined" && process.env?.REACT_APP_API_URL) ||
-  "http://localhost:5000";
+import API_BASE_URL from "../api";
 
 // --- WebAuthn helpers ---
 const base64urlToUint8Array = (base64url) => {

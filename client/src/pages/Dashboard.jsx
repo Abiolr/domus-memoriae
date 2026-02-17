@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
+import API_BASE_URL from "../api";
 import { useNavigate } from "react-router-dom";
 import "../styles/Dashboard.css";
 
 export default function Dashboard() {
   const nav = useNavigate();
-  const API_BASE = "http://localhost:5000/api";
+  const API_BASE = `${API_BASE_URL}/api`;
 
   const [vaults, setVaults] = useState([]);
   const [isLoading, setIsLoading] = useState(true);

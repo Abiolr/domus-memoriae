@@ -1,3 +1,4 @@
+import API_BASE_URL from "../api";
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../components/Header";
@@ -66,7 +67,7 @@ function scoreTone(score) {
 export default function Vault() {
   const nav = useNavigate();
   const { vaultId } = useParams();
-  const API_BASE = "http://localhost:5000/api";
+  const API_BASE = `${API_BASE_URL}/api`;
 
   const [viewMode, setViewMode] = useState("grid");
   const [path, setPath] = useState([{ id: "root", name: "Vault" }]);

@@ -4,7 +4,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import "../styles/Login.css";
 
-const API_BASE_URL = "http://localhost:5000";
+import API_BASE_URL from "../api";
 
 const base64urlToUint8Array = (base64url) => {
   const padding = "=".repeat((4 - (base64url.length % 4)) % 4);
