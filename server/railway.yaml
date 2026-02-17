@@ -1,6 +1,6 @@
 services:
   - type: web
-    :contentReference[oaicite:4]{index=4}api
+    name: domus-memoriae-api
     env: python
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
