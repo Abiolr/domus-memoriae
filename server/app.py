@@ -40,7 +40,7 @@ except Exception as e:
 # ============================================================================
 
 # Explicitly define the frontend URL for CORS and Cookie trust
-FRONTEND_URL = "http://localhost:5173" 
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
 
 CORS(app, 
      supports_credentials=True, 
