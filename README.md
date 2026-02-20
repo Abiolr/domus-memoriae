@@ -1,6 +1,6 @@
 # Domus Memoriae
 
-> **A Home for Time Should Never Erase**
+> **A Home for What Time Should Never Erase**
 > 
 > A secure, generational digital heirloom that actively monitors and preserves your family's most treasured files against time and format obsolescence.
 
